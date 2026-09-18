@@ -144,4 +144,40 @@ async function grade(topic, questions, answers) {
   }
 }
 
-module.exports = { simplify, deepDive, grade };
+/**
+ * Call POST /api/discovery/daily-post on the Python service.
+ * @param {string} userId
+ * @returns {Promise<Object>}
+ */
+async function getDailyDiscovery(userId = 'default_user') {
+  if (IS_MOCK) {
+    return {
+      user_id: userId,
+      title: 'How Your Credit Score Is Actually Calculated',
+      topic: 'how your credit score is actually calculated',
+      source: 'discovery',
+      source_url: 'https://www.myfico.com/credit-education/whats-in-your-credit-score',
+      source_domain: 'myfico.com',
+      image_url: null,
+      summary: 'Credit scores are calculated using five key factors with distinct percentage weights. Payment history and amounts owed carry the greatest influence on your rating.',
+      key_points: [
+        'Payment history accounts for 35% of a FICO score.',
+        'Amounts owed (credit utilization) makes up 30%.',
+        'Length of credit history contributes 15%.',
+      ],
+      why_it_matters: 'Understanding these weights prevents costly mistakes like closing old cards or maxing out revolving limits.',
+      surprising_fact: 'Closing an unused zero-balance credit card can actually reduce your score by spiking utilization.',
+      try_this: 'Check your current revolving credit utilization ratio to ensure it stays below 30%.',
+    };
+  }
+
+  try {
+    const { data } = await axios.post(`${BASE_URL}/api/discovery/daily-post`, { userId });
+    return data;
+  } catch (err) {
+    const msg = err.response?.data?.detail || err.message;
+    throw Object.assign(new Error(`Python /api/discovery/daily-post failed: ${msg}`), { isPythonError: true });
+  }
+}
+
+module.exports = { simplify, deepDive, grade, getDailyDiscovery };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getDiscovery, saveFeedItem } from '../api.js'
+import { getDiscovery, saveFeedItem, getVault } from '../api.js'
+import LawDiscoveryPanel from '../components/LawDiscoveryPanel.jsx'
 
 /* ── Category → Visual Config ─────────────────────────────── */
 const CAT_CONFIG = {
@@ -160,8 +161,21 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
   const [likes, setLikes]   = useState({})
   const [likeCounts, setLikeCounts] = useState({})
   const [saved, setSaved]   = useState({}) // { [_id]: true }
+  const [vaultContext, setVaultContext] = useState(['React', 'MongoDB', 'GATE Exam Prep'])
 
-  useEffect(() => { loadDiscovery() }, [])
+  useEffect(() => {
+    loadDiscovery()
+    if (userId) {
+      getVault(userId)
+        .then((vaultItems) => {
+          if (Array.isArray(vaultItems) && vaultItems.length > 0) {
+            const topics = vaultItems.map((v) => v.topic).filter(Boolean)
+            if (topics.length > 0) setVaultContext(topics)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [userId])
 
   async function loadDiscovery() {
     setStatus('loading')
@@ -232,6 +246,9 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
           </div>
         </div>
       </div>
+
+      {/* ── Mental Model Discovery Engine ── */}
+      <LawDiscoveryPanel vaultContext={vaultContext} />
 
       {/* ── Feed ── */}
       <div className="disc-feed">
