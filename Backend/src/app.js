@@ -8,6 +8,7 @@ const discoveryRoutes = require('./routes/discoveryRoutes');
 const deepDiveRoutes = require('./routes/deepDiveRoutes');
 const vaultRoutes = require('./routes/vaultRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 const healthRoutes = require('./routes/healthRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -21,6 +22,7 @@ app.use(express.json());
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api', healthRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api', feedRoutes);
 app.use('/api', discoveryRoutes);

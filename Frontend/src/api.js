@@ -26,6 +26,15 @@ async function request(method, path, body) {
 export const upsertInterests = (userId, interests) =>
   request('POST', '/user/interests', { ...(userId ? { userId } : {}), interests })
 
+// ── Auth ───────────────────────────────────────────────────────────────────────
+/** Sign up a new account. Returns { userId, username }. */
+export const signup = (email, username, password) =>
+  request('POST', '/auth/signup', { email, username, password })
+
+/** Log in with username + password. Returns { userId, username, hasInterests }. */
+export const login = (username, password) =>
+  request('POST', '/auth/login', { username, password })
+
 // ── Feed ───────────────────────────────────────────────────────────────────────
 /** Fetch the personalised interest feed for a user. */
 export const getFeed = (userId) =>

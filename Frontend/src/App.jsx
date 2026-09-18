@@ -18,6 +18,9 @@ export default function App() {
   // Topic lifted here so FeedPage can pre-load DeepDivePage
   const [pendingTopic, setPendingTopic] = useState(null)
 
+  // 1 = login form, 2 = sign-up interest picker
+  const [loginStartStep, setLoginStartStep] = useState(1)
+
   const showToast = useCallback((msg) => {
     setToast({ msg, show: true })
     setTimeout(() => setToast(t => ({ ...t, show: false })), 2800)
@@ -35,6 +38,12 @@ export default function App() {
     navigate('feed')
   }, [navigate])
 
+  /** Open the auth page at a specific step (1=login, 2=signup). */
+  const openAuth = useCallback((step = 1) => {
+    setLoginStartStep(step)
+    navigate('login')
+  }, [navigate])
+
   /** Called by FeedPage "Deep Dive" button to pre-fill the topic. */
   const openDeepDive = useCallback((topic) => {
     setPendingTopic(topic)
@@ -50,8 +59,12 @@ export default function App() {
     <>
       {isAppPage && <Navbar page={page} navigate={navigate} />}
 
-      {page === 'landing'   && <LandingPage navigate={navigate} />}
-      {page === 'login'     && <LoginPage navigate={navigate} onLogin={handleLogin} />}
+      {page === 'landing'   && (
+        <LandingPage navigate={navigate} userId={userId} onAuth={openAuth} />
+      )}
+      {page === 'login'     && (
+        <LoginPage navigate={navigate} onLogin={handleLogin} startStep={loginStartStep} />
+      )}
       {page === 'feed'      && (
         <FeedPage
           userId={userId}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 /* ─────────────────────────────────────────────────────────
    LANDING PAGE — MindVault
@@ -114,6 +114,7 @@ function useScrollReveal(ref, options = {}) {
   }, [])
 }
 
+
 // ── FAQ ITEM ─────────────────────────────────────────────
 function FaqItem({ q, a, index }) {
   const [open, setOpen] = useState(false)
@@ -151,7 +152,7 @@ function FaqItem({ q, a, index }) {
 }
 
 // ── MAIN LANDING PAGE ────────────────────────────────────
-export default function LandingPage({ navigate }) {
+export default function LandingPage({ navigate, userId, onAuth }) {
   const heroRef       = useRef(null)
   const statsRef      = useRef(null)
   const featuresRef   = useRef(null)
@@ -159,6 +160,13 @@ export default function LandingPage({ navigate }) {
   const faqRef        = useRef(null)
   const floatRef      = useRef(null)
   const [demoTab, setDemoTab] = useState(0)
+
+  // "Login" → auth page step 1 (email/password → interests)
+  const handleLogin = useCallback(() => onAuth(1), [onAuth])
+
+  // "Sign up" → auth page step 2 (interests directly)
+  const handleSignup = useCallback(() => onAuth(2), [onAuth])
+
 
   // ── Hero load animation ──────────────────────────────
   useEffect(() => {
@@ -218,8 +226,21 @@ export default function LandingPage({ navigate }) {
             <a href="#faq"      className="lp-nav-link">FAQ</a>
           </div>
           <div className="lp-nav-actions">
-            <button className="btn btn-ghost"   onClick={() => navigate('login')} style={{ padding: '8px 18px', fontSize: '13px' }}>Log in</button>
-            <button className="btn btn-primary" onClick={() => navigate('login')} onMouseDown={punchBtn} style={{ padding: '8px 20px', fontSize: '13px' }}>Get started</button>
+            <button
+              className="btn btn-ghost"
+              onClick={handleLogin}
+              style={{ padding: '8px 18px', fontSize: '13px' }}
+            >
+              Login
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSignup}
+              onMouseDown={punchBtn}
+              style={{ padding: '8px 20px', fontSize: '13px' }}
+            >
+              Sign up
+            </button>
           </div>
         </div>
       </header>
@@ -241,10 +262,13 @@ export default function LandingPage({ navigate }) {
               understand it before sealing it in your personal vault.
             </p>
             <div className="hero-ctas" style={{ opacity: 0 }}>
-              <button className="btn btn-primary btn-lg" onClick={() => navigate('login')} onMouseDown={punchBtn}>
-                Start learning for free →
+              <button className="btn btn-primary btn-lg" onClick={handleSignup} onMouseDown={punchBtn}>
+                Start learning — sign up free →
               </button>
-              <button className="btn btn-ghost btn-lg" onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}>
+              <button
+                className="btn btn-ghost btn-lg"
+                onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
+              >
                 See how it works
               </button>
             </div>
@@ -377,10 +401,10 @@ export default function LandingPage({ navigate }) {
                     <button
                       className="btn btn-primary"
                       style={{ padding: '8px 18px', fontSize: 13 }}
-                      onClick={() => navigate('login')}
+                      onClick={handleSignup}
                       onMouseDown={punchBtn}
                     >
-                      Open in app →
+                      Sign up free →
                     </button>
                   </div>
                   {/* Fake quiz teaser */}
@@ -398,10 +422,10 @@ export default function LandingPage({ navigate }) {
                     <button
                       className="btn btn-primary"
                       style={{ marginTop: 12, padding: '9px 20px', fontSize: 13 }}
-                      onClick={() => navigate('login')}
+                      onClick={handleSignup}
                       onMouseDown={punchBtn}
                     >
-                      Take full quiz →
+                      Sign up to take quiz →
                     </button>
                   </div>
                 </div>
@@ -438,10 +462,10 @@ export default function LandingPage({ navigate }) {
           </p>
           <button
             className="btn btn-primary btn-lg footer-cta-btn"
-            onClick={() => navigate('login')}
+            onClick={handleSignup}
             onMouseDown={punchBtn}
           >
-            Start for free — no account needed →
+            Create free account →
           </button>
         </div>
       </section>
