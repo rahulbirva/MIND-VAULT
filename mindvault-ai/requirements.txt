@@ -1,0 +1,8 @@
+ddgs
+pymongo
+beautifulsoup4
+requests
+ollama
+python-dotenv
+fastapi
+uvicorn
