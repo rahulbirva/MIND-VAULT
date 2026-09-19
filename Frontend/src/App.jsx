@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
 import DiscoveryPage from './pages/DiscoveryPage.jsx'
 import DeepDivePage from './pages/DeepDivePage.jsx'
+import LearnFeedPage from './pages/LearnFeedPage.jsx'
 import VaultPage from './pages/VaultPage.jsx'
 import Navbar from './components/Navbar.jsx'
 import Toast from './components/Toast.jsx'
@@ -17,7 +18,7 @@ export default function App() {
     const savedUid = localStorage.getItem('mv_userId')
     const savedPage = localStorage.getItem('mv_page')
     if (savedUid) {
-      return (savedPage && !['landing', 'login'].includes(savedPage)) ? savedPage : 'feed'
+      return (savedPage && !['landing', 'login'].includes(savedPage)) ? savedPage : 'learnfeed'
     }
     return 'landing'
   })
@@ -54,10 +55,10 @@ export default function App() {
   /** Called by LoginPage once the user has been created in the backend. */
   const handleLogin = useCallback((uid) => {
     localStorage.setItem('mv_userId', uid)
-    localStorage.setItem('mv_page', 'feed')
+    localStorage.setItem('mv_page', 'learnfeed')
     setUserId(uid)
     setFeedRefreshTrigger(n => n + 1)
-    navigate('feed')
+    navigate('learnfeed')
   }, [navigate])
 
   /** Log out and return to landing page */
@@ -101,6 +102,9 @@ export default function App() {
       )}
       {page === 'login'     && (
         <LoginPage navigate={navigate} onLogin={handleLogin} startStep={loginStartStep} />
+      )}
+      {page === 'learnfeed' && (
+        <LearnFeedPage showToast={showToast} />
       )}
       {page === 'feed'      && (
         <FeedPage

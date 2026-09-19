@@ -10,6 +10,7 @@ const vaultRoutes = require('./routes/vaultRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const learnFeedRoutes = require('./routes/learnFeedRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api', feedRoutes);
 app.use('/api', discoveryRoutes);
 app.use('/api', deepDiveRoutes);
 app.use('/api', vaultRoutes);
+app.use('/api/learnfeed', learnFeedRoutes);
 
 // ── 404 catch-all ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

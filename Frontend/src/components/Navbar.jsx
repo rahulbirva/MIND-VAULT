@@ -1,5 +1,6 @@
 export default function Navbar({ page, navigate, onRefreshFeed, onLogout }) {
   const tabs = [
+    { id: 'learnfeed', label: '🔥 LearnFeed' },
     { id: 'feed',      label: 'Feed' },
     { id: 'discovery', label: 'Discovery' },
     { id: 'deepdive',  label: 'Deep Dive' },
