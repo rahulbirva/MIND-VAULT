@@ -66,17 +66,21 @@ function catFromTopic(topic = '') {
 
 /** Map a backend FeedItem to what the card UI expects. */
 function mapItem(item) {
-  const cat = catFromTopic(item.topic)
+  const cat = item.cat || catFromTopic(item.topic)
   const keyPoints = Array.isArray(item.keyPoints) ? item.keyPoints : []
+  const cleanTags = (Array.isArray(item.tags) && item.tags.length > 0)
+    ? item.tags.map(t => t.replace(/^#/, ''))
+    : deriveTags(item.topic, cat)
   return {
-    _id:       item._id,
+    _id:           item._id,
     cat,
-    title:     item.topic,
-    body:      item.body || item.summary || '',
+    title:         item.topic,
+    body:          item.body || item.summary || '',
     keyPoints,
-    imageUrl:  item.imageUrl || getFallbackImage(cat),
-    tags:      deriveTags(item.topic, cat),
-    videoUrl:  item.videoUrl,
+    imageUrl:      item.imageUrl || getFallbackImage(cat),
+    tags:          cleanTags,
+    videoUrl:      item.videoUrl,
+    isRecommended: Boolean(item.isRecommended),
   }
 }
 
@@ -127,7 +131,14 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onSave, saved, onD
         <div className="post-banner-overlay" />
         <div className="post-banner-badge-row">
           <div className="post-banner-cat">{cfg.emoji} {item.cat}</div>
-          <div className="post-banner-pill">{isNew ? '⚡ New Article' : 'Curated'}</div>
+          <div className="post-banner-pills-wrap">
+            {item.isRecommended && (
+              <div className="post-banner-pill recommended-pill" title="Recommended based on tags from your vault">
+                ✨ Recommended for you
+              </div>
+            )}
+            <div className="post-banner-pill">{isNew ? '⚡ New Article' : 'Curated'}</div>
+          </div>
         </div>
       </div>
 
@@ -138,7 +149,11 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onSave, saved, onD
         </div>
         <div className="post-meta">
           <span className="post-username">MindVault · {item.cat}</span>
-          <span className="post-time">{isNew ? 'Just arrived' : 'Curated insight'}</span>
+          <span className="post-time">
+            {item.isRecommended
+              ? (isNew ? '✨ Recommended for you · ⚡ New Article' : '✨ Recommended for you')
+              : (isNew ? '⚡ New Article · Just arrived' : 'Curated insight')}
+          </span>
         </div>
         {onDismiss && (
           <button

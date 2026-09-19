@@ -59,7 +59,39 @@ router.get('/feed', async (req, res, next) => {
       });
     }
 
-    // 1. Fetch all previous post bodies/summaries for this user to guarantee deduplication
+    // 2. Fetch all saved and liked items & tags from vaultitems for this specific user
+    const userVaultDocs = await VaultItem.find({
+      $or: [
+        { userId: userId },
+        { userId: user._id },
+        { userId: String(user._id) },
+      ]
+    }).select('tags cat topic').lean();
+
+    const userSavedTags = new Set();
+    const userSavedCats = new Set();
+    const userSavedKeywords = [];
+
+    for (const doc of userVaultDocs) {
+      if (doc.cat) {
+        userSavedCats.add(doc.cat);
+        userSavedKeywords.push(doc.cat);
+      }
+      if (Array.isArray(doc.tags)) {
+        for (const t of doc.tags) {
+          const cleanTag = t.replace(/^#/, '').trim();
+          if (cleanTag) {
+            userSavedTags.add(cleanTag.toLowerCase());
+            userSavedKeywords.push(cleanTag);
+          }
+        }
+      }
+    }
+
+    // Blend user's base interests with the specific tags from their vaultitems
+    const blendedTopics = Array.from(new Set([...user.interests, ...userSavedKeywords.slice(0, 6)]));
+
+    // 3. Fetch all previous post bodies/summaries for this user to guarantee deduplication
     const userDocs = await FeedItem.find({ userId }).select('body summary topic').lean();
     const dbBodies = new Set(
       userDocs
@@ -72,7 +104,86 @@ router.get('/feed', async (req, res, next) => {
 
     const isReload = req.query.reload === 'true' || req.query.refresh === 'true';
 
-    // If NOT reloading and user already has valid feed items in DB: return them sorted newest first
+    function calculateAffinityScore(doc) {
+      let score = 0;
+      if (doc.cat && userSavedCats.has(doc.cat)) score += 3;
+      if (Array.isArray(doc.tags)) {
+        for (const t of doc.tags) {
+          const clean = t.replace(/^#/, '').toLowerCase().trim();
+          if (userSavedTags.has(clean) || userSavedTags.has(t.toLowerCase().trim())) {
+            score += 5;
+          }
+        }
+      }
+      const lowerTopic = (doc.topic || '').toLowerCase();
+      for (const kw of userSavedKeywords) {
+        const cleanKw = kw.replace(/^#/, '').toLowerCase().trim();
+        if (cleanKw && cleanKw.length > 2 && lowerTopic.includes(cleanKw)) {
+          score += 4;
+        }
+      }
+      return score;
+    }
+
+    function isTagMatched(doc) {
+      return calculateAffinityScore(doc) > 0;
+    }
+
+    function blendFeedByRatio(allDocs, isRatio = 0.6, interestRatio = 0.4) {
+      const tagPool = [];
+      const interestPool = [];
+
+      for (const rawDoc of allDocs) {
+        const doc = rawDoc.toObject ? rawDoc.toObject() : { ...rawDoc };
+        if (isTagMatched(doc)) {
+          doc.isRecommended = true;
+          tagPool.push(doc);
+        } else {
+          doc.isRecommended = false;
+          interestPool.push(doc);
+        }
+      }
+
+      // If user has no tag-matched items yet, return full interest pool
+      if (tagPool.length === 0) return interestPool;
+      if (interestPool.length === 0) return tagPool;
+
+      const totalTarget = Math.min(allDocs.length, 30);
+      const targetTagCount = Math.round(totalTarget * isRatio);
+      const targetInterestCount = totalTarget - targetTagCount;
+
+      const selectedTags = tagPool.slice(0, targetTagCount);
+      const selectedInterests = interestPool.slice(0, targetInterestCount);
+
+      // Backfill if one pool is smaller
+      if (selectedTags.length < targetTagCount) {
+        const diff = targetTagCount - selectedTags.length;
+        selectedInterests.push(...interestPool.slice(targetInterestCount, targetInterestCount + diff));
+      } else if (selectedInterests.length < targetInterestCount) {
+        const diff = targetInterestCount - selectedInterests.length;
+        selectedTags.push(...tagPool.slice(targetTagCount, targetTagCount + diff));
+      }
+
+      // Interleave in a 60% / 40% (3 Tag : 2 Interest) rhythm
+      const blended = [];
+      let tIdx = 0;
+      let iIdx = 0;
+
+      while (tIdx < selectedTags.length || iIdx < selectedInterests.length) {
+        // 3 Tag-affinity posts (60%)
+        for (let k = 0; k < 3 && tIdx < selectedTags.length; k++) {
+          blended.push(selectedTags[tIdx++]);
+        }
+        // 2 Base interest posts (40%)
+        for (let k = 0; k < 2 && iIdx < selectedInterests.length; k++) {
+          blended.push(selectedInterests[iIdx++]);
+        }
+      }
+
+      return blended;
+    }
+
+    // If NOT reloading and user already has valid feed items in DB: return blended 40% / 60% stream
     if (!isReload && userDocs.length > 0) {
       const existingFeed = await FeedItem.find({
         userId,
@@ -95,16 +206,17 @@ router.get('/feed', async (req, res, next) => {
         }
       }
       if (cleanFeed.length >= user.interests.length) {
-        return res.status(200).json(cleanFeed);
+        const blendedResult = blendFeedByRatio(cleanFeed, 0.6, 0.4);
+        return res.status(200).json(blendedResult);
       }
     }
 
-    // 2. Either reload=true OR user has insufficient clean items: Generate brand new, unique articles!
+    // 4. Either reload=true OR user has insufficient clean items: Generate brand new, unique articles!
     const excludeBodies = new Set(dbBodies);
     const excludeTopics = new Set(dbTopics);
-    const items = await pythonService.simplify(user.interests, excludeBodies, excludeTopics);
+    const items = await pythonService.simplify(blendedTopics, excludeBodies, excludeTopics);
 
-    // 3. Persist new articles to MongoDB, strictly checking both topic and body uniqueness
+    // 5. Persist new articles to MongoDB, strictly checking both topic and body uniqueness
     const insertedInThisBatch = new Set();
     for (const item of items) {
       if (isRepetitiveLegacyItem(item)) continue;
@@ -151,11 +263,7 @@ router.get('/feed', async (req, res, next) => {
       }
     }
 
-    // 4. Return the complete feed for this user:
-    // Sorted { createdAt: -1 } so:
-    // -> Newer info comes in the beginning (at the top)!
-    // -> Whatever was given before goes down below!
-    // -> Strictly deduplicated by both topic and body so no duplicates ever repeat!
+    // 6. Return the complete feed for this user blended at 40% Interests / 60% Tags:
     const allUserFeed = await FeedItem.find({
       userId,
       source: 'interest',
@@ -178,7 +286,8 @@ router.get('/feed', async (req, res, next) => {
       }
     }
 
-    return res.status(200).json(finalFeed);
+    const finalBlended = blendFeedByRatio(finalFeed, 0.6, 0.4);
+    return res.status(200).json(finalBlended);
   } catch (err) {
     next(err);
   }
