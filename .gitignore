@@ -14,15 +14,6 @@ __pycache__/
 .pytest_cache/
 **/.pytest_cache/
 
-# Environment variables & secrets (keep .env.example tracked)
-.env
-.env.local
-.env.*.local
-**/.env
-**/.env.local
-**/.env.*.local
-!**/.env.example
-
 # Node.js dependencies & logs
 node_modules/
 **/node_modules/
