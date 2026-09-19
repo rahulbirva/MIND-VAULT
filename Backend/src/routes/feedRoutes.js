@@ -11,6 +11,7 @@ const User = require('../models/User');
 const FeedItem = require('../models/FeedItem');
 const VaultItem = require('../models/VaultItem');
 const pythonService = require('../services/pythonService');
+const { deriveCategory, deriveHashtags } = require('../utils/tagUtils');
 
 function normalizeTopic(topic = '') {
   return (topic || '')
@@ -128,9 +129,16 @@ router.get('/feed', async (req, res, next) => {
           (item.videoUrl && item.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)/i) ? item.videoUrl : null) ||
           pythonService.getImageUrlForTopic(item.topic, insertedInThisBatch.size);
 
+        const itemCat = deriveCategory(item.topic, item.cat || item.category);
+        const itemTags = (Array.isArray(item.tags) && item.tags.length > 0)
+          ? item.tags
+          : deriveHashtags(item.topic, itemCat);
+
         await FeedItem.create({
           userId,
           topic: item.topic,
+          cat: itemCat,
+          tags: itemTags,
           body: bText,
           summary: sText,
           imageUrl: imgUrl,
@@ -197,10 +205,17 @@ router.post('/feed/:id/save', async (req, res, next) => {
     feedItem.seenAt = new Date();
     await feedItem.save();
 
-    // Copy into VaultItem
+    // Copy into VaultItem with cat and tags inside the object
+    const savedCat = feedItem.cat || deriveCategory(feedItem.topic);
+    const savedTags = (Array.isArray(feedItem.tags) && feedItem.tags.length > 0)
+      ? feedItem.tags
+      : deriveHashtags(feedItem.topic, savedCat);
+
     const vaultItem = await VaultItem.create({
       userId,
       topic: feedItem.topic,
+      cat: savedCat,
+      tags: savedTags,
       body: feedItem.body || feedItem.summary || '',
       summary: feedItem.summary || feedItem.body || '',
       keyFacts: feedItem.keyPoints || [],

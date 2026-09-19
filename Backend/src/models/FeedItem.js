@@ -4,14 +4,21 @@ const feedItemSchema = new mongoose.Schema(
   {
     // null for discovery items not tied to a specific user session
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
     topic: {
       type: String,
       required: true,
       trim: true,
+    },
+    cat: {
+      type: String,
+      default: '',
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
     body: {
       type: String,

@@ -87,13 +87,9 @@ export function deriveHashtags(topic = '', category = '') {
 
   for (const w of words) {
     const formattedTag = `#${w.charAt(0).toUpperCase() + w.slice(1)}`
-    if (!tags.some(t => t.toLowerCase() === formattedTag.toLowerCase()) && tags.length < 4) {
+    if (!tags.some(t => t.toLowerCase() === formattedTag.toLowerCase()) && tags.length < 5) {
       tags.push(formattedTag)
     }
-  }
-
-  if (!tags.includes('#MindVault') && tags.length < 5) {
-    tags.push('#MindVault')
   }
 
   return tags

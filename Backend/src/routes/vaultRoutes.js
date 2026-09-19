@@ -6,6 +6,7 @@
 
 const router = require('express').Router();
 const VaultItem = require('../models/VaultItem');
+const { deriveCategory, deriveHashtags } = require('../utils/tagUtils');
 
 router.get('/vault', async (req, res, next) => {
   try {
@@ -45,16 +46,21 @@ router.post('/vault/like', async (req, res, next) => {
       return res.status(200).json(existing);
     }
 
+    const itemCat = cat || deriveCategory(cleanTopic);
+    const itemTags = (Array.isArray(tags) && tags.length > 0)
+      ? tags.map(t => (t.startsWith('#') ? t : `#${t}`))
+      : deriveHashtags(cleanTopic, itemCat);
+
     const item = await VaultItem.create({
       userId,
       topic: cleanTopic,
+      cat: itemCat,
+      tags: itemTags,
       body: body || summary || '',
       summary: summary || body || '',
       keyFacts: Array.isArray(keyFacts) ? keyFacts : [],
       imageUrl: imageUrl || null,
       videoUrl: videoUrl || null,
-      cat: cat || '',
-      tags: Array.isArray(tags) ? tags : [],
       sourceType: 'liked',
     });
 
