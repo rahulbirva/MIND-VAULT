@@ -10,7 +10,14 @@
  * photography, and specific factual takeaways.
  */
 
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load .env from project root, Backend directory, or process.cwd()
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
+
 const axios = require('axios');
 
 const IS_MOCK = process.env.MOCK_MODE === 'true';

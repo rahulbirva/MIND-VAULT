@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
-require('dotenv').config({ path: 'Backend/.env' });
+const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, 'Backend/.env') });
+dotenv.config();
+
 const VaultItem = require('./Backend/src/models/VaultItem');
 const User = require('./Backend/src/models/User');
 const FeedItem = require('./Backend/src/models/FeedItem');

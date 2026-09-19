@@ -78,7 +78,7 @@ router.get('/feed', async (req, res, next) => {
         source: 'interest',
       })
         .sort({ createdAt: -1 })
-        .limit(30);
+        .limit(1000);
 
       const seenTopics = new Set();
       const seenBodies = new Set();
@@ -153,7 +153,7 @@ router.get('/feed', async (req, res, next) => {
       source: 'interest',
     })
       .sort({ createdAt: -1 })
-      .limit(30);
+      .limit(1000);
 
     const finalSeenTopics = new Set();
     const finalSeenBodies = new Set();

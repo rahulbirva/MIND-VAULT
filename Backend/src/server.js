@@ -1,7 +1,14 @@
 // ── TLS FIX — must be the very first line ─────────────────────────────────────
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load .env from project root, Backend directory, or process.cwd()
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config();
+
 const app = require('./app');
 const mongoose = require('mongoose');
 
