@@ -33,8 +33,7 @@ mongoose
     console.log('✅  MongoDB connected');
     startServer();
   })
-  .catch((err) => {
-    console.error('❌  MongoDB connection error:', err.message);
-    console.error('   Check your MONGO_URI in .env');
-    process.exit(1);
+    console.error('⚠️  MongoDB connection warning:', err.message);
+    console.log('⚡  Starting server in offline/mock mode...');
+    startServer();
   });

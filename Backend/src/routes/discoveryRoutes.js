@@ -1,8 +1,8 @@
 /**
  * discoveryRoutes.js
  * ─────────────────────────────────────────────────────────────────────────────
- * GET  /api/discovery       — Proactive practical discovery feed outside user's interests
- * POST /api/discover-law    — Mental Model Discovery Engine (anchored to user context)
+ * GET  /api/discovery            — Proactive practical discovery feed outside user's interests
+ * POST /api/discover-law         — Mental Model Discovery Engine (anchored to user context)
  * POST /api/discovery/daily-post — Autonomous daily discovery synthesizer
  */
 

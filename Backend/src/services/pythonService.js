@@ -684,6 +684,11 @@ async function grade(topic, questions, answers) {
   }
 }
 
+/**
+ * Call POST /api/discovery/daily-post on the Python service.
+ * @param {string} userId
+ * @returns {Promise<Object>}
+ */
 async function getDailyDiscovery(userId = 'default_user') {
   if (IS_MOCK) {
     return {
