@@ -12,6 +12,10 @@ const vaultItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    body: {
+      type: String,
+      default: '',
+    },
     summary: {
       type: String,
       default: '',
@@ -21,6 +25,10 @@ const vaultItemSchema = new mongoose.Schema(
       default: [],
     },
     videoUrl: {
+      type: String,
+      default: null,
+    },
+    imageUrl: {
       type: String,
       default: null,
     },

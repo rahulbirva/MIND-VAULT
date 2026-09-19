@@ -86,6 +86,7 @@ router.post('/deepdive/answer', async (req, res, next) => {
         await VaultItem.create({
           userId,
           topic: cleanTopic,
+          body: diveData.summary || '',
           summary: diveData.summary || '',
           keyFacts: diveData.keyFacts || [],
           videoUrl: diveData.videoUrl || null,

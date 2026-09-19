@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getFeed, saveFeedItem } from '../api.js'
+import { getFeed, saveFeedItem, dismissFeedItem } from '../api.js'
 
 /* ── Category → Visual Config ─────────────────────────────── */
 const CAT_CONFIG = {
@@ -18,6 +18,40 @@ const CAT_CONFIG = {
 }
 const DEFAULT_CFG = { emoji: '📚', grad: 'linear-gradient(135deg,#9FB2AC 0%,#6F8E87 100%)', text: '#fff' }
 
+const FALLBACK_TOPIC_IMAGES = {
+  Space:       'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+  Technology:  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+  History:     'https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=1200&q=80',
+  Science:     'https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80',
+  Philosophy:  'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=80',
+  Economics:   'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
+  Psychology:  'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=1200&q=80',
+  Biology:     'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=1200&q=80',
+  Mathematics: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
+  Politics:    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
+  Health:      'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80',
+  Art:         'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
+  default:     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+}
+
+function getFallbackImage(cat) {
+  return FALLBACK_TOPIC_IMAGES[cat] || FALLBACK_TOPIC_IMAGES.default
+}
+
+function deriveTags(topic = '', cat = '') {
+  const cleanCategory = cat ? cat.replace(/\s+/g, '') : 'Insight'
+  const tags = [cleanCategory]
+  const words = topic.split(/[\s:,-]+/).filter(w => w.length > 3 && !['about', 'their', 'which', 'there', 'where', 'these', 'those', 'under', 'after', 'with', 'from'].includes(w.toLowerCase()))
+  for (const w of words.slice(0, 2)) {
+    const cleanWord = w.replace(/[^a-zA-Z0-9]/g, '')
+    if (cleanWord && !tags.some(t => t.toLowerCase() === cleanWord.toLowerCase())) {
+      tags.push(cleanWord)
+    }
+  }
+  tags.push('MindVault')
+  return tags.slice(0, 4)
+}
+
 /**
  * Derive a display category from the topic string.
  * Checks if any known category name is a substring of the topic.
@@ -31,13 +65,17 @@ function catFromTopic(topic = '') {
 
 /** Map a backend FeedItem to what the card UI expects. */
 function mapItem(item) {
+  const cat = catFromTopic(item.topic)
+  const keyPoints = Array.isArray(item.keyPoints) ? item.keyPoints : []
   return {
-    _id:    item._id,
-    cat:    catFromTopic(item.topic),
-    title:  item.topic,
-    body:   item.summary,
-    tags:   (item.keyPoints || []).slice(0, 4),
-    videoUrl: item.videoUrl,
+    _id:       item._id,
+    cat,
+    title:     item.topic,
+    body:      item.body || item.summary || '',
+    keyPoints,
+    imageUrl:  item.imageUrl || getFallbackImage(cat),
+    tags:      deriveTags(item.topic, cat),
+    videoUrl:  item.videoUrl,
   }
 }
 
@@ -57,7 +95,7 @@ function SkeletonCard() {
 }
 
 /* ── Single Feed Post Card ─────────────────────────────────── */
-function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave, saved }) {
+function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave, saved, onDismiss, isNew }) {
   const cfg = CAT_CONFIG[item.cat] || DEFAULT_CFG
   const [animatingHeart, setAnimatingHeart] = useState(false)
 
@@ -73,11 +111,23 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
     <article className="post-card">
       {/* ── Banner ── */}
       <div className="post-banner" style={{ background: cfg.grad }}>
-        <div className="post-banner-emoji">{cfg.emoji}</div>
-        <div className="post-banner-cat" style={{ color: cfg.text }}>{item.cat}</div>
-        <div className="post-banner-deco post-banner-deco-1" />
-        <div className="post-banner-deco post-banner-deco-2" />
-        <div className="post-banner-pill">For you</div>
+        {item.imageUrl && (
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="post-banner-img"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = getFallbackImage(item.cat)
+            }}
+          />
+        )}
+        <div className="post-banner-overlay" />
+        <div className="post-banner-badge-row">
+          <div className="post-banner-cat">{cfg.emoji} {item.cat}</div>
+          <div className="post-banner-pill">{isNew ? '⚡ New Article' : 'Curated'}</div>
+        </div>
       </div>
 
       {/* ── Post Header ── */}
@@ -87,9 +137,27 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
         </div>
         <div className="post-meta">
           <span className="post-username">MindVault · {item.cat}</span>
-          <span className="post-time">In your interests</span>
+          <span className="post-time">{isNew ? 'Just arrived' : 'Curated insight'}</span>
         </div>
-        <div className="post-interest-dot" />
+        {onDismiss && (
+          <button
+            className="post-dismiss-btn"
+            onClick={onDismiss}
+            title="Mark as seen (remove from feed)"
+            style={{
+              marginLeft: 'auto',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted, #888)',
+              fontSize: '14px',
+              cursor: 'pointer',
+              padding: '4px 8px',
+              borderRadius: '6px',
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* ── Action Bar ── */}
@@ -153,13 +221,40 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
         {' '}{item.title}
       </div>
 
-      {/* ── Body ── */}
-      <p className="post-body">{item.body}</p>
+      {/* ── In-Depth Body Content ── */}
+      <div className="post-body">
+        {item.body ? (
+          item.body.split(/\n\s*\n/).map((para, pIdx) => (
+            <p key={pIdx} className="post-paragraph">
+              {para.trim()}
+            </p>
+          ))
+        ) : (
+          <p className="post-paragraph">{item.title}</p>
+        )}
+      </div>
+
+      {/* ── Key Takeaways & Core Principles ── */}
+      {item.keyPoints && item.keyPoints.length > 0 && (
+        <div className="post-keypoints-box">
+          <div className="post-keypoints-title">
+            <span>💡</span> Core Principles & Takeaways
+          </div>
+          <ul className="post-keypoints-list">
+            {item.keyPoints.map((point, ptIdx) => (
+              <li key={ptIdx} className="post-keypoint-item">
+                <span className="post-keypoint-dot">▸</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* ── Hashtags ── */}
       <div className="post-hashtags">
         {item.tags.map(t => (
-          <span key={t} className="post-hashtag">#{t.replace(/\s+/g, '')}</span>
+          <span key={t} className="post-hashtag">#{t}</span>
         ))}
       </div>
 
@@ -176,7 +271,7 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
 }
 
 /* ── Feed Page ─────────────────────────────────────────────── */
-export default function FeedPage({ userId, navigate, showToast, openDeepDive }) {
+export default function FeedPage({ userId, navigate, showToast, openDeepDive, refreshTrigger }) {
   const [items, setItems] = useState([])
   const [status, setStatus] = useState('loading') // loading | ok | error
   const [errorMsg, setErrorMsg] = useState('')
@@ -190,30 +285,45 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
       setErrorMsg('No user found. Please go back and set your interests first.')
       return
     }
-    loadFeed()
-  }, [userId])
+    // Check if the browser page was reloaded (F5 / refresh)
+    const isBrowserReload = (performance.getEntriesByType('navigation')?.[0]?.type === 'reload')
+    loadFeed(isBrowserReload)
+  }, [userId, refreshTrigger])
 
-  async function loadFeed() {
+  async function loadFeed(isReload = false) {
     setStatus('loading')
     try {
-      const raw = await getFeed(userId)
-      const mapped = raw.map(mapItem)
+      const raw = await getFeed(userId, isReload)
+      const mapped = []
+      const seenIds = new Set()
+      const seenTitles = new Set()
+      for (const r of raw) {
+        const item = mapItem(r)
+        const titleKey = (item.title || '').trim().toLowerCase()
+        if ((!item._id || !seenIds.has(item._id)) && !seenTitles.has(titleKey)) {
+          if (item._id) seenIds.add(item._id)
+          seenTitles.add(titleKey)
+          mapped.push(item)
+        }
+      }
       setItems(mapped)
       setLikes(Object.fromEntries(mapped.map((_, i) => [i, false])))
       setLikeCounts(Object.fromEntries(mapped.map((_, i) => [i, Math.floor(Math.random() * 400) + 80])))
       setStatus('ok')
 
-      // Animate cards in
-      if (typeof window.anime !== 'undefined') {
-        window.anime({
-          targets: '.post-card',
-          opacity: [0, 1],
-          translateY: [24, 0],
-          delay: window.anime.stagger(90),
-          duration: 550,
-          easing: 'easeOutExpo',
-        })
-      }
+      // Animate cards in safely after DOM mount
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && typeof window.anime !== 'undefined') {
+          window.anime({
+            targets: '.post-card',
+            opacity: [0, 1],
+            translateY: [16, 0],
+            delay: window.anime.stagger(60, { start: 50 }),
+            duration: 400,
+            easing: 'easeOutExpo',
+          })
+        }
+      }, 50)
     } catch (err) {
       setErrorMsg(err.message)
       setStatus('error')
@@ -226,6 +336,18 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
       ...prev,
       [i]: prev[i] + (likes[i] ? -1 : 1),
     }))
+  }
+
+  async function handleDismiss(id) {
+    try {
+      if (id) {
+        await dismissFeedItem(id)
+      }
+      setItems(prev => prev.filter(item => item._id !== id))
+      showToast('Article marked as seen')
+    } catch (err) {
+      console.error('Dismiss failed:', err)
+    }
   }
 
   async function handleSave(item) {
@@ -245,10 +367,23 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
     <div className="disc-wrap page-enter">
       {/* ── Header ── */}
       <div className="disc-header">
-        <div className="disc-header-inner">
+        <div className="disc-header-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 className="page-title">Your feed</h1>
-            <p className="page-subtitle">Simplified knowledge tailored to your interests</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h1 className="page-title" style={{ margin: 0 }}>Your feed</h1>
+              <button
+                className="btn btn-ghost"
+                onClick={() => loadFeed(true)}
+                title="Reload feed (fetch new articles, retire seen)"
+                style={{ fontSize: '12px', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '20px' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                Reload Feed
+              </button>
+            </div>
+            <p className="page-subtitle" style={{ marginTop: 4 }}>Simplified knowledge tailored to your interests</p>
           </div>
           <div className="disc-header-stats">
             <div className="disc-stat">
@@ -278,7 +413,7 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
             <div className="empty-icon">⚠️</div>
             <h3 className="empty-title">Could not load your feed</h3>
             <p className="empty-sub">{errorMsg}</p>
-            <button className="btn btn-primary" onClick={loadFeed} style={{ marginTop: 12 }}>
+            <button className="btn btn-primary" onClick={() => loadFeed(true)} style={{ marginTop: 12 }}>
               Retry
             </button>
           </div>
@@ -287,8 +422,11 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
         {status === 'ok' && items.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
-            <h3 className="empty-title">Your feed is empty</h3>
-            <p className="empty-sub">Update your interests to see personalised content.</p>
+            <h3 className="empty-title">Your feed is caught up!</h3>
+            <p className="empty-sub">All previous articles were seen. Hit "Reload Feed" to generate fresh ones.</p>
+            <button className="btn btn-primary" onClick={() => loadFeed(true)} style={{ marginTop: 12 }}>
+              Fetch Fresh Articles
+            </button>
           </div>
         )}
 
@@ -296,12 +434,14 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive }) 
           <FeedPostCard
             key={item._id || i}
             item={item}
+            isNew={i === 0}
             liked={likes[i]}
             likeCount={likeCounts[i] ?? 100}
             onToggleLike={() => handleToggleLike(i)}
             onDeepDive={() => openDeepDive(item.title)}
             onSave={() => handleSave(item)}
             saved={!!saved[item._id]}
+            onDismiss={() => handleDismiss(item._id)}
           />
         ))}
       </div>

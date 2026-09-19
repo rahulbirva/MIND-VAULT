@@ -37,16 +37,29 @@ export const login = (username, password) =>
 
 // ── Feed ───────────────────────────────────────────────────────────────────────
 /** Fetch the personalised interest feed for a user. */
-export const getFeed = (userId) =>
-  request('GET', `/feed?userId=${encodeURIComponent(userId)}`)
+export const getFeed = (userId, reload = false) =>
+  request('GET', `/feed?userId=${encodeURIComponent(userId)}${reload ? '&reload=true' : ''}`)
 
 /** Save a FeedItem to the user's vault (sourceType: "saved"). */
 export const saveFeedItem = (feedItemId, userId) =>
   request('POST', `/feed/${feedItemId}/save`, { userId })
 
+/** Mark a FeedItem as seen/dismissed so it leaves the feed. */
+export const dismissFeedItem = (feedItemId) =>
+  request('POST', `/feed/${feedItemId}/dismiss`)
+
 // ── Discovery ─────────────────────────────────────────────────────────────────
-/** Fetch the daily rotating discovery feed. */
-export const getDiscovery = () => request('GET', '/discovery')
+/** Fetch the practical discovery feed (excluding user interests, zero duplicate topics). */
+export const getDiscovery = (userId = '', refresh = false) =>
+  request('GET', `/discovery?userId=${encodeURIComponent(userId || '')}${refresh ? '&refresh=true' : ''}`)
+
+/** Discover a new mental model synthesized from user vault concepts. */
+export const discoverLaw = (vaultContext = []) =>
+  request('POST', '/discover-law', { vaultContext })
+
+/** Fetch an autonomous proactive discovery post synthesized from real web knowledge. */
+export const getDailyDiscoveryPost = (userId = 'default_user') =>
+  request('POST', '/discovery/daily-post', { userId })
 
 // ── Deep Dive ─────────────────────────────────────────────────────────────────
 /** Fetch crash-course content for a topic (does not persist). */

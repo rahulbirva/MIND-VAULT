@@ -9,11 +9,23 @@ import Navbar from './components/Navbar.jsx'
 import Toast from './components/Toast.jsx'
 
 export default function App() {
-  const [page, setPage] = useState('landing')
-  const [toast, setToast] = useState({ msg: '', show: false })
-
   // userId is persisted in localStorage so it survives refreshes
   const [userId, setUserId] = useState(() => localStorage.getItem('mv_userId') || null)
+
+  // Persist the active page across reloads so user stays on feed/vault etc.
+  const [page, setPage] = useState(() => {
+    const savedUid = localStorage.getItem('mv_userId')
+    const savedPage = localStorage.getItem('mv_page')
+    if (savedUid) {
+      return (savedPage && !['landing', 'login'].includes(savedPage)) ? savedPage : 'feed'
+    }
+    return 'landing'
+  })
+
+  // Signal counter to trigger feed reload
+  const [feedRefreshTrigger, setFeedRefreshTrigger] = useState(0)
+
+  const [toast, setToast] = useState({ msg: '', show: false })
 
   // Topic lifted here so FeedPage can pre-load DeepDivePage
   const [pendingTopic, setPendingTopic] = useState(null)
@@ -27,16 +39,34 @@ export default function App() {
   }, [])
 
   const navigate = useCallback((p) => {
+    localStorage.setItem('mv_page', p)
     setPage(p)
+    if (p === 'feed') {
+      setFeedRefreshTrigger(n => n + 1)
+    }
     window.scrollTo(0, 0)
+  }, [])
+
+  const triggerFeedRefresh = useCallback(() => {
+    setFeedRefreshTrigger(n => n + 1)
   }, [])
 
   /** Called by LoginPage once the user has been created in the backend. */
   const handleLogin = useCallback((uid) => {
     localStorage.setItem('mv_userId', uid)
+    localStorage.setItem('mv_page', 'feed')
     setUserId(uid)
+    setFeedRefreshTrigger(n => n + 1)
     navigate('feed')
   }, [navigate])
+
+  /** Log out and return to landing page */
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('mv_userId')
+    localStorage.removeItem('mv_page')
+    setUserId(null)
+    setPage('landing')
+  }, [])
 
   /** Open the auth page at a specific step (1=login, 2=signup). */
   const openAuth = useCallback((step = 1) => {
@@ -57,7 +87,14 @@ export default function App() {
 
   return (
     <>
-      {isAppPage && <Navbar page={page} navigate={navigate} />}
+      {isAppPage && (
+        <Navbar
+          page={page}
+          navigate={navigate}
+          onRefreshFeed={triggerFeedRefresh}
+          onLogout={handleLogout}
+        />
+      )}
 
       {page === 'landing'   && (
         <LandingPage navigate={navigate} userId={userId} onAuth={openAuth} />
@@ -67,10 +104,12 @@ export default function App() {
       )}
       {page === 'feed'      && (
         <FeedPage
+          key={feedRefreshTrigger}
           userId={userId}
           navigate={navigate}
           showToast={showToast}
           openDeepDive={openDeepDive}
+          refreshTrigger={feedRefreshTrigger}
         />
       )}
       {page === 'discovery' && (
@@ -94,6 +133,7 @@ export default function App() {
           userId={userId}
           showToast={showToast}
           navigate={navigate}
+          openDeepDive={openDeepDive}
         />
       )}
 

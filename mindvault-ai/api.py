@@ -136,83 +136,76 @@ def health_check():
     }
 
 
+from concurrent.futures import ThreadPoolExecutor
+
+def _process_one_topic(topic: str) -> SimplifiedFeedItem:
+    clean_topic = topic.strip()
+    lower_topic = clean_topic.lower()
+
+    if MOCK_MODE:
+        fixture = MOCK_FEED_ITEMS.get(lower_topic, DEFAULT_FEED_ITEM)
+        return SimplifiedFeedItem(
+            topic=clean_topic,
+            summary=fixture["summary"],
+            keyPoints=fixture["keyPoints"],
+            videoUrl=fixture.get("videoUrl"),
+        )
+
+    try:
+        suggestions = suggest_articles_for_interest(clean_topic, max_results=1)
+        if suggestions:
+            article = suggestions[0]
+            scraped = scrape_article(article["url"], timeout=4)
+            text = scraped["text"] or article.get("snippet", "")
+            simplified = simplify_text(text[:1200], title=article.get("title", clean_topic))
+
+            summary = simplified.get("summary", "")
+            key_points = simplified.get("key_points", [])
+            image_or_video = scraped.get("image_url")
+
+            return SimplifiedFeedItem(
+                topic=clean_topic,
+                summary=summary or f"Overview of {clean_topic}.",
+                keyPoints=key_points if len(key_points) >= 2 else [
+                    f"Key insight regarding {clean_topic}.",
+                    f"Major principles and foundational context.",
+                    f"Practical implications and applications.",
+                ],
+                videoUrl=image_or_video,
+            )
+        else:
+            res = simplify_text(f"Key overview and fundamentals of {clean_topic}.", title=clean_topic)
+            return SimplifiedFeedItem(
+                topic=clean_topic,
+                summary=res.get("summary", f"Introduction to {clean_topic}."),
+                keyPoints=res.get("key_points") or [
+                    f"Foundations of {clean_topic}.",
+                    f"Modern developments in {clean_topic}.",
+                    f"Key takeaways for practical understanding.",
+                ],
+                videoUrl=None,
+            )
+    except Exception as e:
+        print(f"[api.py /simplify] Error processing topic '{clean_topic}': {e}")
+        fixture = MOCK_FEED_ITEMS.get(lower_topic, DEFAULT_FEED_ITEM)
+        return SimplifiedFeedItem(
+            topic=clean_topic,
+            summary=fixture["summary"],
+            keyPoints=fixture["keyPoints"],
+            videoUrl=fixture.get("videoUrl"),
+        )
+
 @app.post("/simplify", response_model=List[SimplifiedFeedItem])
 def simplify_topics(req: SimplifyRequest):
     """
-    Given an array of topics, generate simplified feed cards matching the
-    exact schema expected by Backend/src/services/pythonService.js.
+    Given an array of topics, generate simplified feed cards concurrently.
     """
     if not req.topics:
         return []
 
-    results = []
-    for topic in req.topics:
-        clean_topic = topic.strip()
-        lower_topic = clean_topic.lower()
-
-        if MOCK_MODE:
-            fixture = MOCK_FEED_ITEMS.get(lower_topic, DEFAULT_FEED_ITEM)
-            results.append(
-                SimplifiedFeedItem(
-                    topic=clean_topic,
-                    summary=fixture["summary"],
-                    keyPoints=fixture["keyPoints"],
-                    videoUrl=fixture.get("videoUrl"),
-                )
-            )
-            continue
-
-        try:
-            # 1. Search for a top article related to this topic
-            suggestions = suggest_articles_for_interest(clean_topic, max_results=1)
-            if suggestions:
-                article = suggestions[0]
-                scraped = scrape_article(article["url"])
-                text = scraped["text"] or article.get("snippet", "")
-                simplified = simplify_text(text, title=article.get("title", clean_topic))
-
-                summary = simplified.get("summary", "")
-                key_points = simplified.get("key_points", [])
-                image_or_video = scraped.get("image_url")
-
-                results.append(
-                    SimplifiedFeedItem(
-                        topic=clean_topic,
-                        summary=summary or f"Overview of {clean_topic}.",
-                        keyPoints=key_points if len(key_points) >= 2 else [
-                            f"Key insight regarding {clean_topic}.",
-                            f"Major principles and foundational context.",
-                            f"Practical implications and applications.",
-                        ],
-                        videoUrl=image_or_video,
-                    )
-                )
-            else:
-                # Fallback to direct AI generation if search returns empty
-                res = simplify_text(f"Key overview and fundamentals of {clean_topic}.", title=clean_topic)
-                results.append(
-                    SimplifiedFeedItem(
-                        topic=clean_topic,
-                        summary=res.get("summary", f"Introduction to {clean_topic}."),
-                        keyPoints=res.get("key_points") or [
-                            f"Foundations of {clean_topic}.",
-                            f"Modern developments in {clean_topic}.",
-                            f"Key takeaways for practical understanding.",
-                        ],
-                        videoUrl=None,
-                    )
-                )
-        except Exception as e:
-            print(f"[api.py /simplify] Error processing topic '{clean_topic}': {e}")
-            fixture = MOCK_FEED_ITEMS.get(lower_topic, DEFAULT_FEED_ITEM)
-            results.append(
-                SimplifiedFeedItem(
-                    topic=clean_topic,
-                    summary=fixture["summary"],
-                    keyPoints=fixture["keyPoints"],
-                    videoUrl=fixture.get("videoUrl"),
-                )
-            )
+    # Run topics in parallel for speed
+    with ThreadPoolExecutor(max_workers=min(4, len(req.topics))) as executor:
+        results = list(executor.map(_process_one_topic, req.topics))
 
     return results
 

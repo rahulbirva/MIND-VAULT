@@ -76,62 +76,25 @@ def expand_interest(interest: str) -> list[str]:
     clean_interest = interest.strip()
     interest_key = clean_interest.lower()
 
-    if MOCK_MODE:
-        if interest_key in MOCK_SUBTOPICS:
-            return list(MOCK_SUBTOPICS[interest_key])
-        return [
-            f"{clean_interest} basics",
-            f"{clean_interest} history",
-            f"{clean_interest} innovations",
-            f"{clean_interest} discoveries",
-            f"{clean_interest} key concepts",
-            f"{clean_interest} future trends",
-            f"{clean_interest} challenges",
-            f"{clean_interest} global impact",
-        ]
+    if interest_key in MOCK_SUBTOPICS:
+        return list(MOCK_SUBTOPICS[interest_key])
 
-    system_prompt = (
-        "You are an educational curriculum designer and topic analyzer. "
-        "Given a broad user interest topic, generate a JSON array of 8 to 10 "
-        "distinct, specific, and engaging subtopics suitable for beginner-friendly learning articles.\n\n"
-        "Rules:\n"
-        "- Respond with ONLY a valid JSON array of strings (e.g. [\"subtopic 1\", \"subtopic 2\"]).\n"
-        "- No markdown fences, no ```json, no preamble, and no postamble.\n"
-        "- Each subtopic must be a concrete concept, technology, discovery, or historical facet.\n"
-        "- Keep each string 2 to 4 words long."
-    )
+    # Check for partial matches
+    for k, v in MOCK_SUBTOPICS.items():
+        if k in interest_key or interest_key in k:
+            return list(v)
 
-    try:
-        response = ollama.chat(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Broad interest: {clean_interest}"},
-            ],
-        )
-        raw_content = response["message"]["content"]
-        cleaned = _clean_json_array(raw_content)
-        data = json.loads(cleaned)
-
-        if isinstance(data, list) and len(data) > 0:
-            subtopics = [str(item).strip() for item in data if str(item).strip()]
-            if subtopics:
-                return subtopics
-
-        raise ValueError("Model did not return a non-empty list of strings")
-
-    except Exception as e:
-        print(f"[topic_expander] LLM call or parsing failed for '{interest}': {e}. Using fallback.")
-        return [
-            clean_interest,
-            f"{clean_interest} basics",
-            f"{clean_interest} history",
-            f"{clean_interest} facts",
-            f"{clean_interest} future",
-            f"{clean_interest} science",
-            f"{clean_interest} discoveries",
-            f"{clean_interest} applications",
-        ]
+    # Return fast, high-quality rule-based subtopics for any custom topic
+    return [
+        clean_interest,
+        f"{clean_interest} breakthroughs",
+        f"{clean_interest} fundamentals",
+        f"{clean_interest} key discoveries",
+        f"{clean_interest} practical applications",
+        f"{clean_interest} history and origins",
+        f"{clean_interest} future horizons",
+        f"{clean_interest} core principles",
+    ]
 
 
 if __name__ == "__main__":

@@ -12,13 +12,15 @@ debug when something looks wrong live.
 
 import json
 import os
+from dotenv import load_dotenv
 import ollama
+
+load_dotenv(override=True)
 
 MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"
 
 # Configurable via env var so you can swap models without touching code —
-# e.g. MODEL_NAME=qwen2.5:7b or MODEL_NAME=qwen2.5:1.5b if your laptop is weaker.
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:1.5b")
 
 SYSTEM_PROMPT = (
     "You are the writing engine for MindVault, an app that helps curious learners "
@@ -96,12 +98,15 @@ def simplify_text(raw_text: str, title: str = "") -> dict:
         }
 
     try:
+        prompt_text = raw_text[:1500]
         response = ollama.chat(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Title: {title}\n\nArticle text:\n{raw_text}"},
+                {"role": "user", "content": f"Title: {title}\n\nArticle text:\n{prompt_text}"},
             ],
+            format="json",
+            options={"temperature": 0.2, "num_predict": 750},
         )
         raw_content = response["message"]["content"]
         cleaned = _clean_json_response(raw_content)
