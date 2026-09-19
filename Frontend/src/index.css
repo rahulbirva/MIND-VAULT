@@ -1752,6 +1752,245 @@ ul { list-style: none; }
   flex-shrink: 0;
 }
 
+/* ── Vault Categories & Hashtag Filter Panel ── */
+.vault-filter-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vault-categories-bar,
+.vault-hashtags-cloud {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vault-filter-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.vault-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--custard-dark);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.vault-cat-pill:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.vault-cat-pill.active {
+  background: var(--blood);
+  color: #ffffff;
+  border-color: var(--blood);
+  box-shadow: 0 2px 8px rgba(93, 13, 24, 0.25);
+}
+
+.vault-cat-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+
+.vault-cat-pill.active .vault-cat-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ── Vault Hashtag Cloud & Chips ── */
+.vault-hashtag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(93, 13, 24, 0.04);
+  border: 1px dashed rgba(93, 13, 24, 0.22);
+  border-radius: 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--blood);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.vault-hashtag-chip:hover {
+  background: var(--blood-light);
+  border-color: var(--blood);
+  border-style: solid;
+  transform: translateY(-1px);
+}
+
+.vault-hashtag-chip.active {
+  background: var(--blood);
+  border-color: var(--blood);
+  border-style: solid;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(93, 13, 24, 0.25);
+}
+
+.vault-hashtag-chip .tag-count {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.vault-clear-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--custard-dark);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vault-clear-filter-btn:hover {
+  background: #FFE4E6;
+  border-color: #FDA4AF;
+  color: #E11D48;
+}
+
+/* ── Active Filter Indicator Bar ── */
+.vault-active-filter-indicator {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--custard-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.active-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--surface);
+  border: 1px solid var(--blood-muted);
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blood);
+}
+
+.active-tag-badge button {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--blood);
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.active-tag-badge button:hover {
+  opacity: 1;
+}
+
+.clear-all-link {
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--blood);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.clear-all-link:hover {
+  color: #881337;
+}
+
+/* ── Card Hashtags & Modal Hashtags ── */
+.vault-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 14px;
+}
+
+.vault-hashtag-tag {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vault-hashtag-tag:hover {
+  background: var(--blood-light);
+  color: var(--blood);
+  border-color: var(--blood);
+  transform: translateY(-1px);
+}
+
+.vault-modal-hashtags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: var(--custard-light);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.vault-modal-tag-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.vault-modal-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* ── Fullscreen Reader View & Dedicated Exit Button ── */
 .vault-fullscreen-overlay {
   position: fixed;
