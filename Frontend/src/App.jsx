@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import LandingPage from './pages/LandingPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
+import ReelsPage from './pages/ReelsPage.jsx'
 import DiscoveryPage from './pages/DiscoveryPage.jsx'
 import VaultPage from './pages/VaultPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
@@ -12,8 +13,10 @@ export default function App() {
   // userId is persisted in localStorage so it survives refreshes
   const [userId, setUserId] = useState(() => localStorage.getItem('mv_userId') || null)
 
-  // Persist the active page across reloads so user stays on feed/vault etc.
+  // Persist the active page across reloads so user stays on feed/vault/reels etc.
   const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab')) return params.get('tab')
     const savedUid = localStorage.getItem('mv_userId')
     const savedPage = localStorage.getItem('mv_page')
     if (savedUid) {
@@ -106,6 +109,13 @@ export default function App() {
           navigate={navigate}
           showToast={showToast}
           refreshTrigger={feedRefreshTrigger}
+        />
+      )}
+      {page === 'reels'     && (
+        <ReelsPage
+          userId={userId}
+          showToast={showToast}
+          navigate={navigate}
         />
       )}
       {page === 'discovery' && (

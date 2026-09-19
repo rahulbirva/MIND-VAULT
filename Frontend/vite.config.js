@@ -12,6 +12,10 @@ export default defineConfig({
         target: 'http://localhost:5001',
         changeOrigin: true,
       },
+      '/generated_reels': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
     },
   },
 })

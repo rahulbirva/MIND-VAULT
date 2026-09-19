@@ -1,0 +1,354 @@
+/* ==========================================================================
+   ReelsPage.css — Modern TikTok/Reels Style AI Video Feed
+   ========================================================================== */
+
+.reels-container {
+  min-height: calc(100vh - 64px);
+  background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #090d16 60%, #030712 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px 32px;
+  color: #f8fafc;
+  overflow-x: hidden;
+}
+
+/* ── Filter Bar ──────────────────────────────────────────────────────────── */
+.reels-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  max-width: 520px;
+  width: 100%;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.reels-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.reels-filter-chip {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.reels-filter-chip:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #e2e8f0;
+}
+.reels-filter-chip.active {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-color: #818cf8;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Reel Viewport & Frame ───────────────────────────────────────────────── */
+.reel-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 720px;
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-height: 800px) {
+  .reel-wrapper {
+    height: 620px;
+    max-width: 360px;
+  }
+}
+
+.reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  background: #090d16;
+}
+
+/* Top & Bottom Gradient Overlays for Readability */
+.reel-overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 18px 0;
+}
+
+.reel-overlay-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px 18px 18px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Header Info */
+.reel-model-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reel-index-badge {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-family: monospace;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+/* ── Side Floating Actions ───────────────────────────────────────────────── */
+.reel-actions-column {
+  position: absolute;
+  right: 14px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  z-index: 20;
+}
+
+.reel-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.reel-action-btn:hover {
+  background: rgba(99, 102, 241, 0.7);
+  transform: scale(1.1);
+  border-color: rgba(129, 140, 248, 0.6);
+}
+.reel-action-btn.liked {
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.6);
+  background: rgba(244, 63, 94, 0.2);
+}
+.reel-action-btn.saved {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.reel-action-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  margin-top: -12px;
+}
+
+/* ── Bottom Content ──────────────────────────────────────────────────────── */
+.reel-topic-pill {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  color: #c7d2fe;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.reel-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #f8fafc;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.reel-caption-card {
+  background: rgba(15, 23, 42, 0.82);
+  border-left: 3px solid #6366f1;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  backdrop-filter: blur(10px);
+  margin-top: 2px;
+}
+
+.reel-caption-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+
+.reel-caption-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.38;
+  color: #f1f5f9;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.reel-prompt-toggle {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+  width: fit-content;
+}
+.reel-prompt-toggle:hover {
+  color: #e2e8f0;
+}
+
+.reel-prompt-box {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Timeline Bar ────────────────────────────────────────────────────────── */
+.reel-timeline-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: #10b981;
+  transition: width 0.1s linear;
+  z-index: 25;
+}
+
+/* ── Play / Pause Overlay Indicator ──────────────────────────────────────── */
+.reel-play-indicator {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: #fff;
+  pointer-events: none;
+  z-index: 15;
+  animation: pulseFade 0.7s forwards;
+}
+
+@keyframes pulseFade {
+  0% { opacity: 0; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* ── Vertical Nav Controls (Next / Prev) ─────────────────────────────────── */
+.reel-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.reel-nav-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+.reel-nav-btn:hover:not(:disabled) {
+  background: #4f46e5;
+  border-color: #818cf8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+}
+.reel-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.reels-empty {
+  max-width: 460px;
+  text-align: center;
+  padding: 48px 24px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 40px;
+}
