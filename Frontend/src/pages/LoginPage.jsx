@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { SUGGESTIONS } from '../data.js'
+import { SUGGESTIONS, KNOWLEDGE_TOPICS } from '../data.js'
 import { signup, login, upsertInterests } from '../api.js'
 
 /**
@@ -272,12 +272,39 @@ export default function LoginPage({ navigate, onLogin, startStep = 1 }) {
                 />
               </div>
 
+              {/* Live matching suggestions while typing */}
+              {inputVal.trim().length > 0 && (
+                <div style={{ marginTop: '12px', marginBottom: '8px' }}>
+                  <p className="suggestions-label" style={{ color: 'var(--blood)', fontWeight: 600 }}>
+                    Matching Topics:
+                  </p>
+                  <div className="suggestion-pills" style={{ marginTop: '6px' }}>
+                    {KNOWLEDGE_TOPICS.filter(t => t.label.toLowerCase().includes(inputVal.trim().toLowerCase())).slice(0, 8).map(t => (
+                      <button
+                        key={t.label}
+                        type="button"
+                        className={`suggestion-pill${interests.includes(t.label.toLowerCase()) ? ' selected' : ''}`}
+                        onClick={() => {
+                          if (!interests.includes(t.label.toLowerCase())) {
+                            setInterests(prev => [...prev, t.label.toLowerCase()])
+                            setInputVal('')
+                          }
+                        }}
+                      >
+                        {t.emoji} {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <p className="suggestions-label">Popular topics</p>
               <div className="suggestion-pills">
                 {SUGGESTIONS.map(({ emoji, label }) => (
                   <button
                     key={label}
-                    className={`suggestion-pill${interests.includes(label) ? ' selected' : ''}`}
+                    type="button"
+                    className={`suggestion-pill${interests.includes(label.toLowerCase()) ? ' selected' : ''}`}
                     onClick={() => toggleSuggestion(label)}
                   >
                     {emoji} {label}

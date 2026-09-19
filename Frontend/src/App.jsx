@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
 import DiscoveryPage from './pages/DiscoveryPage.jsx'
 import VaultPage from './pages/VaultPage.jsx'
+import ProfilePage from './pages/ProfilePage.jsx'
 import Navbar from './components/Navbar.jsx'
 import Toast from './components/Toast.jsx'
 
@@ -124,6 +125,14 @@ export default function App() {
             setVaultTab(t)
             localStorage.setItem('mv_vault_tab', t)
           }}
+        />
+      )}
+      {page === 'profile'   && (
+        <ProfilePage
+          userId={userId}
+          navigate={navigate}
+          showToast={showToast}
+          onRefreshFeed={triggerFeedRefresh}
         />
       )}
 

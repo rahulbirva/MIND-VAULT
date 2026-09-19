@@ -133,3 +133,81 @@ export const SUGGESTIONS = [
   { emoji: '🌿', label: 'Health' },
   { emoji: '🎨', label: 'Art' },
 ];
+
+export const KNOWLEDGE_TOPICS = [
+  // Space & Astronomy
+  { emoji: '🌌', label: 'Space', category: 'Cosmology' },
+  { emoji: '🕳️', label: 'Black Holes', category: 'Astrophysics' },
+  { emoji: '🔭', label: 'James Webb Telescope', category: 'Astronomy' },
+  { emoji: '🪐', label: 'Exoplanets', category: 'Planetary Science' },
+  { emoji: '🚀', label: 'Mars Exploration', category: 'Spaceflight' },
+  { emoji: '🛰️', label: 'Satellites & Orbits', category: 'Aerospace' },
+
+  // Technology & Computer Science
+  { emoji: '💡', label: 'Technology', category: 'Tech Fundamentals' },
+  { emoji: '🤖', label: 'Artificial Intelligence', category: 'Computer Science' },
+  { emoji: '🧠', label: 'Machine Learning', category: 'Data Science' },
+  { emoji: '💬', label: 'Large Language Models', category: 'AI & NLP' },
+  { emoji: '⚡', label: 'Quantum Computing', category: 'Physics & Computing' },
+  { emoji: '🦾', label: 'Robotics', category: 'Automation' },
+  { emoji: '🔐', label: 'Cybersecurity', category: 'Information Security' },
+  { emoji: '⛓️', label: 'Blockchain', category: 'Distributed Systems' },
+  { emoji: '💻', label: 'Software Architecture', category: 'Engineering' },
+
+  // Economics & Markets
+  { emoji: '📊', label: 'Economics', category: 'Finance & Markets' },
+  { emoji: '📈', label: 'Macroeconomics', category: 'Global Systems' },
+  { emoji: '🏷️', label: 'Microeconomics', category: 'Market Dynamics' },
+  { emoji: '🎯', label: 'Behavioral Economics', category: 'Psychology & Economics' },
+  { emoji: '🎲', label: 'Game Theory', category: 'Decision Sciences' },
+  { emoji: '🏦', label: 'Central Banking & Inflation', category: 'Monetary Policy' },
+  { emoji: '💳', label: 'Personal Finance', category: 'Financial Literacy' },
+
+  // History & Civilizations
+  { emoji: '📜', label: 'History', category: 'World History' },
+  { emoji: '🏛️', label: 'Ancient Rome', category: 'Classical Antiquity' },
+  { emoji: '🏺', label: 'Ancient Greece', category: 'Classical History' },
+  { emoji: '🐪', label: 'The Silk Road', category: 'Trade History' },
+  { emoji: '⚔️', label: 'Cold War History', category: 'Modern History' },
+  { emoji: '🏭', label: 'Industrial Revolution', category: 'Economic History' },
+  { emoji: '👑', label: 'The Renaissance', category: 'Cultural History' },
+
+  // Science & Physics
+  { emoji: '🔬', label: 'Science', category: 'Natural Sciences' },
+  { emoji: '⚛️', label: 'Quantum Physics', category: 'Theoretical Physics' },
+  { emoji: '🍎', label: 'General Relativity', category: 'Physics' },
+  { emoji: '🧬', label: 'Biology', category: 'Life Sciences' },
+  { emoji: '✂️', label: 'CRISPR & Gene Editing', category: 'Biotechnology' },
+  { emoji: '🧪', label: 'Chemistry', category: 'Physical Sciences' },
+  { emoji: '🌍', label: 'Climate Science', category: 'Ecology & Earth' },
+  { emoji: '🌊', label: 'Oceanography', category: 'Marine Science' },
+
+  // Philosophy & Mind
+  { emoji: '🧠', label: 'Philosophy', category: 'Logic & Thought' },
+  { emoji: '🗿', label: 'Stoicism', category: 'Applied Philosophy' },
+  { emoji: '⚖️', label: 'Ethics & Morality', category: 'Moral Philosophy' },
+  { emoji: '🧩', label: 'Psychology', category: 'Human Behavior' },
+  { emoji: '👁️', label: 'Cognitive Biases', category: 'Mental Models' },
+  { emoji: '🔬', label: 'Neuroscience', category: 'Brain Sciences' },
+  { emoji: '🧘', label: 'Mindfulness', category: 'Mental Wellbeing' },
+
+  // Health & Body
+  { emoji: '🌿', label: 'Health', category: 'Preventative Medicine' },
+  { emoji: '🥗', label: 'Nutrition Science', category: 'Diet & Metabolism' },
+  { emoji: '⏳', label: 'Longevity Science', category: 'Biomedical' },
+  { emoji: '💤', label: 'Sleep Science', category: 'Physiology' },
+
+  // Politics, Law & Society
+  { emoji: '🗳️', label: 'Politics', category: 'Governance' },
+  { emoji: '⚖️', label: 'Constitutional Law', category: 'Legal Studies' },
+  { emoji: '🌐', label: 'Geopolitics', category: 'International Relations' },
+  { emoji: '👥', label: 'Sociology', category: 'Social Sciences' },
+
+  // Arts & Culture
+  { emoji: '🎨', label: 'Art', category: 'Visual Culture' },
+  { emoji: '📐', label: 'Architecture', category: 'Design & Form' },
+  { emoji: '🎵', label: 'Music Theory', category: 'Acoustics & Arts' },
+  { emoji: '🗣️', label: 'Linguistics', category: 'Language & Mind' },
+  { emoji: '🔢', label: 'Mathematics', category: 'Pure Sciences' },
+];
+

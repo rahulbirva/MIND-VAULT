@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { getLikedPosts } from '../utils/vaultStore.js'
-import { getVault } from '../api.js'
+import { getVault, getUserProfile } from '../api.js'
 
 export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId, vaultTab = 'saves' }) {
   const [likedCount, setLikedCount] = useState(0)
   const [savedCount, setSavedCount] = useState(0)
   const [vaultDropdownOpen, setVaultDropdownOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [username, setUsername] = useState(() => localStorage.getItem('mv_username') || '')
 
-  // Sync counts
+  // Sync counts and profile
   useEffect(() => {
     function updateCounts() {
       const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
@@ -16,6 +18,15 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
       getVault(activeUid)
         .then(items => {
           if (Array.isArray(items)) setSavedCount(items.length)
+        })
+        .catch(() => {})
+
+      getUserProfile(activeUid)
+        .then(p => {
+          if (p?.username) {
+            setUsername(p.username)
+            localStorage.setItem('mv_username', p.username)
+          }
         })
         .catch(() => {})
     }
@@ -33,6 +44,8 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
     { id: 'feed',      label: 'Feed' },
     { id: 'discovery', label: 'Discovery' },
   ]
+
+  const userInitial = username ? username.charAt(0).toUpperCase() : 'U'
 
   return (
     <nav className="navbar">
@@ -123,18 +136,82 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
         </div>
       </div>
 
-      {onLogout && (
-        <div style={{ marginLeft: 'auto' }}>
+      {/* ── Right-side Actions: User Profile Pill & Dropdown ── */}
+      <div className="nav-right-actions">
+        <div
+          className="nav-profile-container"
+          onMouseEnter={() => setProfileDropdownOpen(true)}
+          onMouseLeave={() => setProfileDropdownOpen(false)}
+        >
           <button
-            className="btn btn-ghost"
-            onClick={onLogout}
-            style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--text-muted, #888)' }}
-            title="Log out"
+            className={`nav-profile-pill${page === 'profile' ? ' active' : ''}`}
+            onClick={() => navigate('profile')}
+            title="Account & Interests Profile"
           >
-            Log out
+            <div className="nav-profile-avatar-circle">
+              {userInitial}
+            </div>
+            <span className="nav-profile-pill-name">{username || 'Profile'}</span>
+            <svg
+              className={`nav-chevron${profileDropdownOpen ? ' open' : ''}`}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
+
+          {/* Profile Dropdown Menu */}
+          <div className={`nav-profile-dropdown${profileDropdownOpen ? ' show' : ''}`}>
+            <div className="nav-profile-dropdown-header">
+              <span className="dropdown-user-greeting">Signed in as</span>
+              <span className="dropdown-user-name">{username || 'Learner'}</span>
+            </div>
+
+            <div className="nav-dropdown-divider" />
+
+            <button
+              className={`nav-dropdown-item${page === 'profile' ? ' active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setProfileDropdownOpen(false)
+                navigate('profile')
+              }}
+            >
+              <div className="nav-dropdown-icon profile-icon">👤</div>
+              <div className="nav-dropdown-text">
+                <span className="nav-dropdown-title">Profile & Interests</span>
+                <span className="nav-dropdown-sub">Name, email, add/delete topics</span>
+              </div>
+            </button>
+
+            <div className="nav-dropdown-divider" />
+
+            {onLogout && (
+              <button
+                className="nav-dropdown-item nav-logout-item"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setProfileDropdownOpen(false)
+                  onLogout()
+                }}
+              >
+                <div className="nav-dropdown-icon logout-icon">🚪</div>
+                <div className="nav-dropdown-text">
+                  <span className="nav-dropdown-title">Log out</span>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }
+

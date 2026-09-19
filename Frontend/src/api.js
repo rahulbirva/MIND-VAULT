@@ -22,9 +22,21 @@ async function request(method, path, body) {
 }
 
 // ── User ───────────────────────────────────────────────────────────────────────
-/** Create or update a user's interests. Omit userId to create a new user. */
+/** Fetch full user profile including username, email, and interests. */
+export const getUserProfile = (userId) =>
+  request('GET', `/user/profile?userId=${encodeURIComponent(userId)}`)
+
+/** Create or replace a user's interests. Omit userId to create a new user. */
 export const upsertInterests = (userId, interests) =>
   request('POST', '/user/interests', { ...(userId ? { userId } : {}), interests })
+
+/** Add a single interest to the user's profile. */
+export const addInterest = (userId, interest) =>
+  request('POST', '/user/interests/add', { userId, interest })
+
+/** Remove a single interest from the user's profile. */
+export const removeInterest = (userId, interest) =>
+  request('DELETE', '/user/interests', { userId, interest })
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 /** Sign up a new account. Returns { userId, username }. */

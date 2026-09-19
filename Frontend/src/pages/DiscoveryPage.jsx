@@ -340,10 +340,6 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
           </div>
           <div className="disc-header-stats">
             <div className="disc-stat">
-              <span className="disc-stat-num">{items.length}</span>
-              <span className="disc-stat-label">posts</span>
-            </div>
-            <div className="disc-stat">
               <span className="disc-stat-num">{Object.values(likes).filter(Boolean).length}</span>
               <span className="disc-stat-label">liked</span>
             </div>

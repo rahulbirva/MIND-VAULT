@@ -390,10 +390,6 @@ export default function FeedPage({ userId, navigate, showToast, refreshTrigger }
           </div>
           <div className="disc-header-stats">
             <div className="disc-stat">
-              <span className="disc-stat-num">{items.length}</span>
-              <span className="disc-stat-label">posts</span>
-            </div>
-            <div className="disc-stat">
               <span className="disc-stat-num">{totalLiked}</span>
               <span className="disc-stat-label">liked</span>
             </div>
