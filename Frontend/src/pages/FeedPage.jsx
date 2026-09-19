@@ -285,9 +285,9 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
       setErrorMsg('No user found. Please go back and set your interests first.')
       return
     }
-    // Check if the browser page was reloaded (F5 / refresh)
+    // Check if the browser page was reloaded (F5 / refresh) or triggered from Navbar/tabs
     const isBrowserReload = (performance.getEntriesByType('navigation')?.[0]?.type === 'reload')
-    loadFeed(isBrowserReload)
+    loadFeed(isBrowserReload || (refreshTrigger > 0))
   }, [userId, refreshTrigger])
 
   async function loadFeed(isReload = false) {
@@ -310,6 +310,9 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
       setLikes(Object.fromEntries(mapped.map((_, i) => [i, false])))
       setLikeCounts(Object.fromEntries(mapped.map((_, i) => [i, Math.floor(Math.random() * 400) + 80])))
       setStatus('ok')
+      if (isReload && showToast) {
+        showToast('✨ Feed updated with fresh articles!')
+      }
 
       // Animate cards in safely after DOM mount
       setTimeout(() => {

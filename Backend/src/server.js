@@ -2,10 +2,10 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 require('dotenv').config();
-const app      = require('./app');
+const app = require('./app');
 const mongoose = require('mongoose');
 
-const PORT      = process.env.PORT      || 5000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mindvault';
 const MOCK_MODE = process.env.MOCK_MODE === 'true';
 
@@ -33,6 +33,7 @@ mongoose
     console.log('✅  MongoDB connected');
     startServer();
   })
+  .catch((err) => {
     console.error('⚠️  MongoDB connection warning:', err.message);
     console.log('⚡  Starting server in offline/mock mode...');
     startServer();

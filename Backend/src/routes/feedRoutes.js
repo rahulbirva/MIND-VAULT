@@ -100,7 +100,8 @@ router.get('/feed', async (req, res, next) => {
 
     // 2. Either reload=true OR user has insufficient clean items: Generate brand new, unique articles!
     const excludeBodies = new Set(dbBodies);
-    const items = await pythonService.simplify(user.interests, excludeBodies);
+    const excludeTopics = new Set(dbTopics);
+    const items = await pythonService.simplify(user.interests, excludeBodies, excludeTopics);
 
     // 3. Persist new articles to MongoDB, strictly checking both topic and body uniqueness
     const insertedInThisBatch = new Set();

@@ -495,25 +495,38 @@ const TOPIC_LIBRARY = {
   ],
 };
 
+function normalizeTopic(topic = '') {
+  return (topic || '')
+    .toLowerCase()
+    .replace(/^(history|politics|health|economics|space|technology|science|philosophy|psychology|biology|mathematics|art):\s*/i, '')
+    .trim();
+}
+
+function normalizeBody(body = '') {
+  return (body || '').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 60);
+}
+
 // Counter to cycle article variations across calls
 let rotateCounter = 0;
 
 /**
- * Generate or pick a fresh article for a given topic/interest, ensuring body is completely unique.
+ * Generate or pick a fresh article for a given topic/interest, ensuring body and topic are completely unique.
  */
-function getMockArticleForTopic(topicName, seedIndex = 0, excludeBodies = new Set()) {
+function getMockArticleForTopic(topicName, seedIndex = 0, excludeBodies = new Set(), excludeTopics = new Set()) {
   const clean = (topicName || '').toLowerCase().trim();
   const matchedCat = Object.keys(TOPIC_LIBRARY).find((cat) => clean.includes(cat));
 
   if (matchedCat) {
     const list = TOPIC_LIBRARY[matchedCat];
-    // Find an article whose body is not in excludeBodies
+    // Find an article whose body and topic are not in exclude sets
     for (let offset = 0; offset < list.length; offset++) {
       const idx = (rotateCounter + seedIndex + offset) % list.length;
       const candidate = list[idx];
-      const checkKey = (candidate.body || candidate.summary || '').trim().toLowerCase();
-      if (!excludeBodies.has(checkKey)) {
-        excludeBodies.add(checkKey);
+      const bKey = normalizeBody(candidate.body || candidate.summary);
+      const tKey = normalizeTopic(candidate.topic);
+      if (!excludeBodies.has(bKey) && !excludeTopics.has(tKey)) {
+        excludeBodies.add(bKey);
+        excludeTopics.add(tKey);
         const img = candidate.imageUrl || getImageUrlForTopic(topicName, seedIndex + offset);
         return {
           ...candidate,
@@ -558,18 +571,43 @@ function getMockArticleForTopic(topicName, seedIndex = 0, excludeBodies = new Se
         `The continuing influence of historical frameworks on modern regulatory policies.`,
       ],
     },
+    {
+      titleSuffix: 'Architectural Models & Practical Frameworks',
+      generate: (t) =>
+        `Understanding ${t} at an architectural level requires decomposing foundational assumptions into modular subsystems. Practitioners who master these mental models can diagnose bottlenecks before they escalate into structural failures.\n\nBy comparing trade-offs between centralized paradigms and distributed heuristics, modern specialists achieve greater operational consistency. Case studies illustrate how resilient architectures accommodate unpredictable spikes while maintaining data integrity.\n\nIntegrating these frameworks into everyday workflows empowers teams to eliminate redundant overhead and scale solutions effectively across diverse environments.`,
+      facts: (t) => [
+        `Decomposition strategies for isolating core failure modes in ${t}.`,
+        `Comparative analysis of centralized versus distributed operational trade-offs.`,
+        `Best practices for maintaining consistency across high-throughput subsystems.`,
+        `Actionable architectural heuristics for scalable domain implementation.`,
+      ],
+    },
+    {
+      titleSuffix: 'Frontiers & Cross-Disciplinary Innovations',
+      generate: (t) =>
+        `At the intersection of ${t} and adjacent domains lies a rich frontier of experimental research and pragmatic breakthroughs. Recent cross-disciplinary synthesis has unlocked novel methodologies that accelerate discovery cycles.\n\nBy leveraging tools from computational modeling, behavioral science, and empirical analysis, investigators can test hypotheses with unprecedented velocity. These interdisciplinary insights frequently challenge entrenched dogmas and reveal high-leverage optimization points.\n\nCultivating fluency in these emerging cross-disciplinary paradigms provides an enduring intellectual edge for modern builders and researchers.`,
+      facts: (t) => [
+        `Interdisciplinary methodologies bridging theoretical principles in ${t} with real-world practice.`,
+        `Recent breakthroughs that challenge legacy domain assumptions.`,
+        `High-leverage optimization techniques unlocked by cross-domain synthesis.`,
+        `Key emerging trajectories expected to define the next phase of innovation.`,
+      ],
+    },
   ];
 
-  for (let cycle = 0; cycle < 30; cycle++) {
+  for (let cycle = 0; cycle < 50; cycle++) {
     const angle = dynamicAngles[(rotateCounter + seedIndex + cycle) % dynamicAngles.length];
     const body = angle.generate(topicName);
-    const checkKey = body.trim().toLowerCase();
+    const bKey = normalizeBody(body);
+    const candidateTopic = `${topicName}: ${angle.titleSuffix} (Series #${((rotateCounter + cycle) % 20) + 1})`;
+    const tKey = normalizeTopic(candidateTopic);
 
-    if (!excludeBodies.has(checkKey)) {
-      excludeBodies.add(checkKey);
+    if (!excludeBodies.has(bKey) && !excludeTopics.has(tKey)) {
+      excludeBodies.add(bKey);
+      excludeTopics.add(tKey);
       const imgUrl = getImageUrlForTopic(topicName, seedIndex + cycle);
       return {
-        topic: `${topicName}: ${angle.titleSuffix}`,
+        topic: candidateTopic,
         body,
         summary: body,
         imageUrl: imgUrl,
@@ -579,12 +617,14 @@ function getMockArticleForTopic(topicName, seedIndex = 0, excludeBodies = new Se
     }
   }
 
-  // Final unique fallback
-  const uniqueToken = Math.floor(Math.random() * 9000 + 1000);
-  const ultimateBody = `An exhaustive analytical breakdown of ${topicName} (Reference Study #${uniqueToken}): Investigating core principles, empirical methodologies, and systemic trade-offs defining research across leading international institutions.`;
-  excludeBodies.add(ultimateBody.trim().toLowerCase());
+  // Final unique fallback with random token
+  const uniqueToken = Math.floor(Math.random() * 90000 + 10000);
+  const ultimateBody = `An exhaustive analytical breakdown of ${topicName} (Study #${uniqueToken}): Investigating core structural principles, empirical methodologies, and systemic trade-offs defining modern research across leading international institutions.`;
+  const ultimateTopic = `${topicName}: Core Investigation #${uniqueToken}`;
+  excludeBodies.add(normalizeBody(ultimateBody));
+  excludeTopics.add(normalizeTopic(ultimateTopic));
   return {
-    topic: `${topicName}: Core Investigation #${uniqueToken}`,
+    topic: ultimateTopic,
     body: ultimateBody,
     summary: ultimateBody,
     imageUrl: getImageUrlForTopic(topicName, seedIndex),
@@ -623,15 +663,16 @@ const MOCK_GRADE_PASS = {
 };
 
 /**
- * Call POST /simplify on the Python service, guaranteeing deduplicated bodies against excludeBodies.
+ * Call POST /simplify on the Python service, guaranteeing deduplicated bodies and topics against exclude sets.
  * @param {string[]} topics
  * @param {Set<string>} excludeBodies
+ * @param {Set<string>} excludeTopics
  * @returns {Promise<Array<{topic, body, summary, keyPoints, videoUrl}>>}
  */
-async function simplify(topics, excludeBodies = new Set()) {
-  rotateCounter++;
+async function simplify(topics, excludeBodies = new Set(), excludeTopics = new Set()) {
+  rotateCounter += Math.floor(Math.random() * 3) + 1;
   if (IS_MOCK) {
-    return topics.map((t, i) => getMockArticleForTopic(t, i, excludeBodies));
+    return topics.map((t, i) => getMockArticleForTopic(t, i, excludeBodies, excludeTopics));
   }
 
   try {
@@ -639,22 +680,24 @@ async function simplify(topics, excludeBodies = new Set()) {
     const results = [];
     for (let i = 0; i < topics.length; i++) {
       const item = data && data[i];
-      const bodyKey = (item?.body || item?.summary || '').trim().toLowerCase();
-      if (item && bodyKey && !excludeBodies.has(bodyKey)) {
-        excludeBodies.add(bodyKey);
+      const bKey = normalizeBody(item?.body || item?.summary || '');
+      const tKey = normalizeTopic(item?.topic || '');
+      if (item && bKey && !excludeBodies.has(bKey) && tKey && !excludeTopics.has(tKey)) {
+        excludeBodies.add(bKey);
+        excludeTopics.add(tKey);
         results.push({
           ...item,
           body: item.body || item.summary,
           imageUrl: item.imageUrl || getImageUrlForTopic(topics[i], i),
         });
       } else {
-        results.push(getMockArticleForTopic(topics[i], i, excludeBodies));
+        results.push(getMockArticleForTopic(topics[i], i, excludeBodies, excludeTopics));
       }
     }
     return results;
   } catch (err) {
     console.warn(`[pythonService] Python /simplify (${err.message}). Seamlessly using high-speed fallback.`);
-    return topics.map((t, i) => getMockArticleForTopic(t, i, excludeBodies));
+    return topics.map((t, i) => getMockArticleForTopic(t, i, excludeBodies, excludeTopics));
   }
 }
 
