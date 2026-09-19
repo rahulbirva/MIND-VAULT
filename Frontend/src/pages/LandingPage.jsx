@@ -12,8 +12,8 @@ const FAQS = [
     a: `MindVault doesn't just surface content — it simplifies it, personalises it to your interests, and then tests whether you actually understood it before saving it to your vault. Most platforms give you information; MindVault turns it into knowledge.`,
   },
   {
-    q: 'How does the Deep Dive quiz work?',
-    a: `After exploring a topic in depth, MindVault presents you with three open-ended questions. You type your own answers, and the system checks whether you've engaged meaningfully with the material. A passing response earns a "Mastered" badge in your vault.`,
+    q: 'How does the Knowledge Vault organize my saves and likes?',
+    a: `Your vault automatically categorizes topics into smart domains (Finance, Law, Space, AI, Science, Health) and generates searchable hashtags. You can filter by category, hashtag clouds, or switch between your Saved and Liked posts anytime.`,
   },
   {
     q: 'Can I customise my interests after onboarding?',
@@ -43,8 +43,8 @@ const FEATURES = [
   },
   {
     icon: '🧠',
-    title: 'Deep Dive Learning',
-    desc: 'Go beyond headlines. Get a structured breakdown: summary, key facts, and an explainer video.',
+    title: 'Smart Categorization',
+    desc: 'Automatic domain tagging and hashtag clouds organize your knowledge without manual filing.',
   },
   {
     icon: '✅',
@@ -292,8 +292,8 @@ export default function LandingPage({ navigate, userId, onAuth }) {
             <div className="hero-card hero-card-sm float-badge" style={{ top: '12%', right: '-24px' }}>
               <span style={{ fontSize: 20 }}>🧠</span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>Quiz passed!</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Black Holes · Deep Dive</div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>Saved to Vault!</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Black Holes · Space & Astronomy</div>
               </div>
             </div>
 
@@ -336,7 +336,7 @@ export default function LandingPage({ navigate, userId, onAuth }) {
         <div className="lp-section-inner">
           <div className="lp-section-header">
             <div className="lp-eyebrow">Everything you need</div>
-            <h2 className="lp-section-title">Built for deep, lasting learning</h2>
+            <h2 className="lp-section-title">Built for lasting knowledge retention</h2>
             <p className="lp-section-sub">
               Six interconnected tools that take you from curious to confident — all in one place.
             </p>

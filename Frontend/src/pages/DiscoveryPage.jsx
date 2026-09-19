@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getDiscovery, saveFeedItem, getVault } from '../api.js'
+import { getDiscovery, saveFeedItem } from '../api.js'
 import { isPostLiked, toggleLikePost } from '../utils/vaultStore.js'
-import LawDiscoveryPanel from '../components/LawDiscoveryPanel.jsx'
 
 /* ── Category → Visual Config ─────────────────────────────── */
 const CAT_CONFIG = {
@@ -258,20 +257,9 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
   const [likes, setLikes]   = useState({})
   const [likeCounts, setLikeCounts] = useState({})
   const [saved, setSaved]   = useState({}) // { [_id]: true }
-  const [vaultContext, setVaultContext] = useState(['React', 'MongoDB', 'GATE Exam Prep'])
 
   useEffect(() => {
     loadDiscovery(false)
-    if (userId) {
-      getVault(userId)
-        .then((vaultItems) => {
-          if (Array.isArray(vaultItems) && vaultItems.length > 0) {
-            const topics = vaultItems.map((v) => v.topic).filter(Boolean)
-            if (topics.length > 0) setVaultContext(topics)
-          }
-        })
-        .catch(() => {})
-    }
   }, [userId])
 
   async function loadDiscovery(isRefresh = false) {
@@ -314,12 +302,13 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
   }
 
   async function handleSave(item) {
-    if (!userId) { showToast('Please log in to save items'); return }
+    const activeUid = userId || 'default_user'
     if (saved[item._id]) { showToast('Already saved to vault'); return }
     try {
-      await saveFeedItem(item._id, userId)
+      await saveFeedItem(item._id, activeUid)
       setSaved(prev => ({ ...prev, [item._id]: true }))
       showToast('📌 Saved to your vault')
+      window.dispatchEvent(new CustomEvent('mindvault_vault_updated', { detail: { type: 'save' } }))
     } catch (err) {
       showToast(`Couldn't save: ${err.message}`)
     }
@@ -365,9 +354,6 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
           </div>
         </div>
       </div>
-
-      {/* ── Mental Model Discovery Engine ── */}
-      <LawDiscoveryPanel vaultContext={vaultContext} />
 
       {/* ── Feed ── */}
       <div className="disc-feed">

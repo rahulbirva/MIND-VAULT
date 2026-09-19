@@ -3,7 +3,6 @@ import LandingPage from './pages/LandingPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
 import DiscoveryPage from './pages/DiscoveryPage.jsx'
-import DeepDivePage from './pages/DeepDivePage.jsx'
 import VaultPage from './pages/VaultPage.jsx'
 import Navbar from './components/Navbar.jsx'
 import Toast from './components/Toast.jsx'
@@ -29,9 +28,6 @@ export default function App() {
   const [feedRefreshTrigger, setFeedRefreshTrigger] = useState(0)
 
   const [toast, setToast] = useState({ msg: '', show: false })
-
-  // Topic lifted here so FeedPage can pre-load DeepDivePage
-  const [pendingTopic, setPendingTopic] = useState(null)
 
   // 1 = login form, 2 = sign-up interest picker
   const [loginStartStep, setLoginStartStep] = useState(1)
@@ -81,15 +77,6 @@ export default function App() {
     navigate('login')
   }, [navigate])
 
-  /** Called by FeedPage "Deep Dive" button to pre-fill the topic. */
-  const openDeepDive = useCallback((topic) => {
-    setPendingTopic(topic)
-    navigate('deepdive')
-  }, [navigate])
-
-  /** Clear the pending topic once DeepDivePage has consumed it. */
-  const clearPendingTopic = useCallback(() => setPendingTopic(null), [])
-
   const isAppPage = !['landing', 'login'].includes(page)
 
   return (
@@ -117,7 +104,6 @@ export default function App() {
           userId={userId}
           navigate={navigate}
           showToast={showToast}
-          openDeepDive={openDeepDive}
           refreshTrigger={feedRefreshTrigger}
         />
       )}
@@ -128,21 +114,11 @@ export default function App() {
           navigate={navigate}
         />
       )}
-      {page === 'deepdive'  && (
-        <DeepDivePage
-          userId={userId}
-          showToast={showToast}
-          navigate={navigate}
-          initialTopic={pendingTopic}
-          onTopicConsumed={clearPendingTopic}
-        />
-      )}
       {page === 'vault'     && (
         <VaultPage
           userId={userId}
           showToast={showToast}
           navigate={navigate}
-          openDeepDive={openDeepDive}
           initialTab={vaultTab}
           onTabChange={(t) => {
             setVaultTab(t)

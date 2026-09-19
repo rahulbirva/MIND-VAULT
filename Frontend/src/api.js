@@ -53,22 +53,11 @@ export const dismissFeedItem = (feedItemId) =>
 export const getDiscovery = (userId = '', refresh = false) =>
   request('GET', `/discovery?userId=${encodeURIComponent(userId || '')}${refresh ? '&refresh=true' : ''}`)
 
-/** Discover a new mental model synthesized from user vault concepts. */
-export const discoverLaw = (vaultContext = []) =>
-  request('POST', '/discover-law', { vaultContext })
-
 /** Fetch an autonomous proactive discovery post synthesized from real web knowledge. */
 export const getDailyDiscoveryPost = (userId = 'default_user') =>
   request('POST', '/discovery/daily-post', { userId })
 
-// ── Deep Dive ─────────────────────────────────────────────────────────────────
-/** Fetch crash-course content for a topic (does not persist). */
-export const startDeepDive = (userId, topic) =>
-  request('POST', '/deepdive', { userId, topic })
 
-/** Submit quiz answers. Backend grades and optionally vaults the topic. */
-export const submitAnswers = (userId, topic, questions, answers) =>
-  request('POST', '/deepdive/answer', { userId, topic, questions, answers })
 
 // ── Vault ─────────────────────────────────────────────────────────────────────
 /** Fetch all vault items for a user, newest first. */

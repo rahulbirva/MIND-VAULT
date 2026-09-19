@@ -5,7 +5,6 @@ const morgan = require('morgan');
 
 const feedRoutes = require('./routes/feedRoutes');
 const discoveryRoutes = require('./routes/discoveryRoutes');
-const deepDiveRoutes = require('./routes/deepDiveRoutes');
 const vaultRoutes = require('./routes/vaultRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -26,7 +25,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api', feedRoutes);
 app.use('/api', discoveryRoutes);
-app.use('/api', deepDiveRoutes);
 app.use('/api', vaultRoutes);
 
 // ── 404 catch-all ──────────────────────────────────────────────────────────────

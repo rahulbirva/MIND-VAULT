@@ -10,15 +10,14 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
   // Sync counts
   useEffect(() => {
     function updateCounts() {
-      const likes = getLikedPosts(userId)
+      const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
+      const likes = getLikedPosts(activeUid)
       setLikedCount(likes.length)
-      if (userId) {
-        getVault(userId)
-          .then(items => {
-            if (Array.isArray(items)) setSavedCount(items.length)
-          })
-          .catch(() => {})
-      }
+      getVault(activeUid)
+        .then(items => {
+          if (Array.isArray(items)) setSavedCount(items.length)
+        })
+        .catch(() => {})
     }
 
     updateCounts()
@@ -33,7 +32,6 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
   const tabs = [
     { id: 'feed',      label: 'Feed' },
     { id: 'discovery', label: 'Discovery' },
-    { id: 'deepdive',  label: 'Deep Dive' },
   ]
 
   return (
@@ -70,7 +68,9 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
             onClick={() => navigate('vault', { tab: vaultTab || 'saves' })}
           >
             <span>Vault</span>
-            <span className="nav-vault-badge">{savedCount + likedCount}</span>
+            {(savedCount + likedCount) > 0 && (
+              <span className="nav-vault-badge">{savedCount + likedCount}</span>
+            )}
             <svg
               className={`nav-chevron${vaultDropdownOpen ? ' open' : ''}`}
               width="12"

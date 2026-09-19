@@ -96,7 +96,7 @@ function SkeletonCard() {
 }
 
 /* ── Single Feed Post Card ─────────────────────────────────── */
-function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave, saved, onDismiss, isNew }) {
+function FeedPostCard({ item, liked, likeCount, onToggleLike, onSave, saved, onDismiss, isNew }) {
   const cfg = CAT_CONFIG[item.cat] || DEFAULT_CFG
   const [animatingHeart, setAnimatingHeart] = useState(false)
 
@@ -199,15 +199,6 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
           </button>
-
-          {/* Deep Dive CTA */}
-          <button className="post-deep-dive-btn" onClick={onDeepDive} aria-label="Deep Dive">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 4 23 10 17 10"/>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-            Deep Dive
-          </button>
         </div>
       </div>
 
@@ -272,7 +263,7 @@ function FeedPostCard({ item, liked, likeCount, onToggleLike, onDeepDive, onSave
 }
 
 /* ── Feed Page ─────────────────────────────────────────────── */
-export default function FeedPage({ userId, navigate, showToast, openDeepDive, refreshTrigger }) {
+export default function FeedPage({ userId, navigate, showToast, refreshTrigger }) {
   const [items, setItems] = useState([])
   const [status, setStatus] = useState('loading') // loading | ok | error
   const [errorMsg, setErrorMsg] = useState('')
@@ -363,9 +354,11 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
   async function handleSave(item) {
     if (saved[item._id]) return
     try {
-      await saveFeedItem(item._id, userId)
+      const activeUid = userId || 'default_user'
+      await saveFeedItem(item._id, activeUid)
       setSaved(prev => ({ ...prev, [item._id]: true }))
       showToast('📌 Saved to your vault')
+      window.dispatchEvent(new CustomEvent('mindvault_vault_updated', { detail: { type: 'save' } }))
     } catch (err) {
       showToast(`Failed to save: ${err.message}`)
     }
@@ -448,7 +441,6 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
             liked={likes[i]}
             likeCount={likeCounts[i] ?? 100}
             onToggleLike={() => handleToggleLike(i)}
-            onDeepDive={() => openDeepDive(item.title)}
             onSave={() => handleSave(item)}
             saved={!!saved[item._id]}
             onDismiss={() => handleDismiss(item._id)}

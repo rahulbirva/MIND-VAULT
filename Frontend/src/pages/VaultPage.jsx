@@ -67,7 +67,7 @@ function renderBodyParagraphs(body = '') {
   ))
 }
 
-export default function VaultPage({ userId, showToast, navigate, openDeepDive, initialTab = 'saves', onTabChange }) {
+export default function VaultPage({ userId, showToast, navigate, initialTab = 'saves', onTabChange }) {
   const [activeTab, setActiveTab]             = useState(initialTab) // 'saves' | 'likes'
   const [savedItems, setSavedItems]           = useState([])
   const [likedItems, setLikedItems]           = useState([])
@@ -586,20 +586,6 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive, i
             <div className="vault-modal-footer">
               <button
                 className="btn btn-primary"
-                onClick={() => {
-                  const topic = selectedItem.title
-                  setSelectedItem(null)
-                  if (openDeepDive) {
-                    openDeepDive(topic)
-                  } else {
-                    navigate('deepdive')
-                  }
-                }}
-              >
-                <span>🎯</span> Start Deep Dive on this Topic
-              </button>
-              <button
-                className="btn btn-ghost vault-footer-exit-btn"
                 onClick={() => setSelectedItem(null)}
               >
                 ✕ Exit Full Screen
