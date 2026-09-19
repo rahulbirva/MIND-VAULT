@@ -57,6 +57,7 @@ def build_post(article: dict) -> dict:
         "source_domain": article["source_domain"],
         "interest": article.get("interest", ""),
         "subtopic": article.get("subtopic", ""),
+        "tags": simplified.get("tags") or [article.get("interest", "general").lower(), article.get("subtopic", "").lower()],
     }
 
 

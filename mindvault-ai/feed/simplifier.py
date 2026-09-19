@@ -55,7 +55,8 @@ SYSTEM_PROMPT = (
     '  "surprising_fact": ONE sentence — the most counter-intuitive or surprising '
     "detail you found in the text\n"
     '  "try_this": ONE short sentence inviting the reader to explain the idea in '
-    "their own words (e.g. \"Try explaining this to a friend in one sentence.\")\n\n"
+    "their own words (e.g. \"Try explaining this to a friend in one sentence.\")\n"
+    '  "tags": a list of 3-5 specific, lowercase semantic keywords or subtopic tags (e.g. ["orbital-mechanics", "rocket-propulsion", "aerospace-engineering"])\n\n'
     "Never return an error message or apology as a JSON value — if the content is "
     "thin, give your best honest attempt instead of refusing."
 )
@@ -72,7 +73,7 @@ def _clean_json_response(raw: str) -> str:
 
 def simplify_text(raw_text: str, title: str = "") -> dict:
     """
-    Returns {"summary": str, "key_points": list[str]}.
+    Returns {"summary": str, "key_points": list[str], "tags": list[str], ...}.
     Falls back to a safe placeholder if the model fails to return valid JSON
     or if MOCK_MODE is on (useful for fast frontend testing without waiting
     on a real LLM call every time).
@@ -84,6 +85,7 @@ def simplify_text(raw_text: str, title: str = "") -> dict:
             "why_it_matters": "[MOCK] This is why the topic matters.",
             "surprising_fact": "[MOCK] Here's a surprising fact about the topic.",
             "try_this": "[MOCK] Try explaining this to a friend in one sentence.",
+            "tags": [title.lower().replace(" ", "-")] if title else ["general-knowledge"],
         }
 
     if not raw_text or len(raw_text.strip()) < 50:
@@ -93,6 +95,7 @@ def simplify_text(raw_text: str, title: str = "") -> dict:
             "why_it_matters": "",
             "surprising_fact": "",
             "try_this": "",
+            "tags": [title.lower().replace(" ", "-")] if title else ["general-knowledge"],
         }
 
     try:
@@ -117,6 +120,7 @@ def simplify_text(raw_text: str, title: str = "") -> dict:
             "why_it_matters": data.get("why_it_matters", ""),
             "surprising_fact": data.get("surprising_fact", ""),
             "try_this": data.get("try_this", ""),
+            "tags": data.get("tags", [title.lower().replace(" ", "-")] if title else ["general-knowledge"]),
         }
 
     except Exception as e:
@@ -127,4 +131,5 @@ def simplify_text(raw_text: str, title: str = "") -> dict:
             "why_it_matters": "",
             "surprising_fact": "",
             "try_this": "",
+            "tags": [title.lower().replace(" ", "-")] if title else ["general-knowledge"],
         }
