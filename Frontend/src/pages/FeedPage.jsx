@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getFeed, saveFeedItem, dismissFeedItem } from '../api.js'
+import { isPostLiked, toggleLikePost } from '../utils/vaultStore.js'
 
 /* ── Category → Visual Config ─────────────────────────────── */
 const CAT_CONFIG = {
@@ -307,8 +308,8 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
         }
       }
       setItems(mapped)
-      setLikes(Object.fromEntries(mapped.map((_, i) => [i, false])))
-      setLikeCounts(Object.fromEntries(mapped.map((_, i) => [i, Math.floor(Math.random() * 400) + 80])))
+      setLikes(Object.fromEntries(mapped.map((item, i) => [i, isPostLiked(userId, item._id, item.title)])))
+      setLikeCounts(Object.fromEntries(mapped.map((item, i) => [i, (isPostLiked(userId, item._id, item.title) ? 1 : 0) + Math.floor(Math.random() * 200) + 50])))
       setStatus('ok')
       if (isReload && showToast) {
         showToast('✨ Feed updated with fresh articles!')
@@ -334,11 +335,17 @@ export default function FeedPage({ userId, navigate, showToast, openDeepDive, re
   }
 
   function handleToggleLike(i) {
-    setLikes(prev => ({ ...prev, [i]: !prev[i] }))
+    const item = items[i]
+    if (!item) return
+    const isNowLiked = toggleLikePost(userId, item)
+    setLikes(prev => ({ ...prev, [i]: isNowLiked }))
     setLikeCounts(prev => ({
       ...prev,
-      [i]: prev[i] + (likes[i] ? -1 : 1),
+      [i]: Math.max(0, (prev[i] || 0) + (isNowLiked ? 1 : -1)),
     }))
+    if (showToast) {
+      showToast(isNowLiked ? '❤️ Added to Liked Posts in Vault' : 'Removed from Liked Posts')
+    }
   }
 
   async function handleDismiss(id) {

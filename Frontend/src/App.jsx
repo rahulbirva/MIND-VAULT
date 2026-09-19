@@ -4,7 +4,6 @@ import LoginPage from './pages/LoginPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
 import DiscoveryPage from './pages/DiscoveryPage.jsx'
 import DeepDivePage from './pages/DeepDivePage.jsx'
-import LearnFeedPage from './pages/LearnFeedPage.jsx'
 import VaultPage from './pages/VaultPage.jsx'
 import Navbar from './components/Navbar.jsx'
 import Toast from './components/Toast.jsx'
@@ -18,10 +17,13 @@ export default function App() {
     const savedUid = localStorage.getItem('mv_userId')
     const savedPage = localStorage.getItem('mv_page')
     if (savedUid) {
-      return (savedPage && !['landing', 'login'].includes(savedPage)) ? savedPage : 'learnfeed'
+      return (savedPage && !['landing', 'login'].includes(savedPage)) ? savedPage : 'feed'
     }
     return 'landing'
   })
+
+  // Vault sub-tab state (saves | likes)
+  const [vaultTab, setVaultTab] = useState(() => localStorage.getItem('mv_vault_tab') || 'saves')
 
   // Signal counter to trigger feed reload
   const [feedRefreshTrigger, setFeedRefreshTrigger] = useState(0)
@@ -39,9 +41,13 @@ export default function App() {
     setTimeout(() => setToast(t => ({ ...t, show: false })), 2800)
   }, [])
 
-  const navigate = useCallback((p) => {
+  const navigate = useCallback((p, options = {}) => {
     localStorage.setItem('mv_page', p)
     setPage(p)
+    if (options?.tab) {
+      setVaultTab(options.tab)
+      localStorage.setItem('mv_vault_tab', options.tab)
+    }
     if (p === 'feed') {
       setFeedRefreshTrigger(n => n + 1)
     }
@@ -55,10 +61,10 @@ export default function App() {
   /** Called by LoginPage once the user has been created in the backend. */
   const handleLogin = useCallback((uid) => {
     localStorage.setItem('mv_userId', uid)
-    localStorage.setItem('mv_page', 'learnfeed')
+    localStorage.setItem('mv_page', 'feed')
     setUserId(uid)
     setFeedRefreshTrigger(n => n + 1)
-    navigate('learnfeed')
+    navigate('feed')
   }, [navigate])
 
   /** Log out and return to landing page */
@@ -94,6 +100,8 @@ export default function App() {
           navigate={navigate}
           onRefreshFeed={triggerFeedRefresh}
           onLogout={handleLogout}
+          userId={userId}
+          vaultTab={vaultTab}
         />
       )}
 
@@ -102,9 +110,6 @@ export default function App() {
       )}
       {page === 'login'     && (
         <LoginPage navigate={navigate} onLogin={handleLogin} startStep={loginStartStep} />
-      )}
-      {page === 'learnfeed' && (
-        <LearnFeedPage showToast={showToast} />
       )}
       {page === 'feed'      && (
         <FeedPage
@@ -138,6 +143,11 @@ export default function App() {
           showToast={showToast}
           navigate={navigate}
           openDeepDive={openDeepDive}
+          initialTab={vaultTab}
+          onTabChange={(t) => {
+            setVaultTab(t)
+            localStorage.setItem('mv_vault_tab', t)
+          }}
         />
       )}
 

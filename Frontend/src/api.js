@@ -77,29 +77,3 @@ export const getVault = (userId) =>
 
 // ── Health ────────────────────────────────────────────────────────────────────
 export const healthCheck = () => request('GET', '/health')
-
-// ── LearnFeed ─────────────────────────────────────────────────────────────────
-/** Fetch paginated LearnFeed posts (10–12 items per batch) with topic filtering */
-export const getLearnFeed = (page = 1, limit = 10, tag = 'All') =>
-  request('GET', `/learnfeed?page=${page}&limit=${limit}&tag=${encodeURIComponent(tag)}`)
-
-/** Refresh LearnFeed posts with a fresh newly randomized 10–12 item batch */
-export const refreshLearnFeed = (limit = 10, tag = 'All') =>
-  request('POST', '/learnfeed/refresh', { limit, tag })
-
-/** Toggle like state for a LearnFeed post */
-export const likeLearnFeedPost = (id, isLiked) =>
-  request('POST', `/learnfeed/${id}/like`, { isLiked })
-
-/** Toggle bookmark state for a LearnFeed post */
-export const bookmarkLearnFeedPost = (id, isBookmarked) =>
-  request('POST', `/learnfeed/${id}/bookmark`, { isBookmarked })
-
-/** Fetch discussion comments for a post */
-export const getLearnFeedComments = (id) =>
-  request('GET', `/learnfeed/${id}/comments`)
-
-/** Submit a discussion comment for a post */
-export const addLearnFeedComment = (id, text, username = 'you') =>
-  request('POST', `/learnfeed/${id}/comments`, { text, username })
-

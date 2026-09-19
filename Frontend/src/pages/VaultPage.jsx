@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getVault } from '../api.js'
+import { getLikedPosts } from '../utils/vaultStore.js'
 
 /* ── Skeleton for Compact Title Card ───────────────────────── */
 function SkeletonCard() {
@@ -23,7 +24,6 @@ function SkeletonCard() {
 
 /**
  * Map a backend VaultItem to the shape the UI expects.
- * VaultItem: { _id, topic, body, summary, keyFacts, imageUrl, videoUrl, sourceType, masteredAt, createdAt }
  */
 function mapItem(item) {
   const CATS = [
@@ -33,22 +33,22 @@ function mapItem(item) {
     'Finance', 'Rights', 'Safety', 'Everyday Tech', 'Cognitive Models',
     'Everyday Engineering', 'Fascinating Knowledge'
   ]
-  const lower = (item.topic || '').toLowerCase()
-  const cat = CATS.find(c => lower.includes(c.toLowerCase())) || 'Practical Knowledge'
+  const lower = (item.topic || item.title || '').toLowerCase()
+  const cat = CATS.find(c => lower.includes(c.toLowerCase())) || item.cat || 'General'
 
   return {
     _id:        item._id,
     cat,
-    title:      item.topic,
-    body:       item.body || item.summary || (item.keyFacts && item.keyFacts.length > 0 ? item.keyFacts.join('\n\n') : ''),
-    summary:    item.summary || '',
-    tags:       (item.keyFacts || []).slice(0, 3),
-    keyFacts:   item.keyFacts || [],
+    title:      item.topic || item.title,
+    body:       item.body || item.summary || (item.keyFacts && item.keyFacts.length > 0 ? item.keyFacts.join('\n\n') : (item.keyPoints ? item.keyPoints.join('\n\n') : '')),
+    summary:    item.summary || item.body || '',
+    tags:       (item.tags && item.tags.length > 0) ? item.tags : (item.keyFacts || item.keyPoints || []).slice(0, 3),
+    keyFacts:   item.keyFacts || item.keyPoints || [],
     videoUrl:   item.videoUrl || null,
     imageUrl:   item.imageUrl || null,
-    status:     item.sourceType === 'mastered' ? 'mastered' : 'saved',
+    status:     item.sourceType === 'mastered' ? 'mastered' : (item.sourceType === 'liked' ? 'liked' : 'saved'),
     masteredAt: item.masteredAt,
-    createdAt:  item.createdAt,
+    createdAt:  item.createdAt || item.likedAt,
   }
 }
 
@@ -71,12 +71,21 @@ function renderBodyParagraphs(body = '') {
   ))
 }
 
-export default function VaultPage({ userId, showToast, navigate, openDeepDive }) {
-  const [items, setItems]               = useState([])
+export default function VaultPage({ userId, showToast, navigate, openDeepDive, initialTab = 'saves', onTabChange }) {
+  const [activeTab, setActiveTab]       = useState(initialTab) // 'saves' | 'likes'
+  const [savedItems, setSavedItems]     = useState([])
+  const [likedItems, setLikedItems]     = useState([])
   const [status, setStatus]             = useState('loading') // loading | ok | error
   const [errorMsg, setErrorMsg]         = useState('')
-  const [filter, setFilter]             = useState('all')
+  const [filter, setFilter]             = useState('all') // 'all' | 'mastered' | 'saved'
   const [selectedItem, setSelectedItem] = useState(null)
+
+  // Sync activeTab when initialTab prop updates from Navbar navigation
+  useEffect(() => {
+    if (initialTab && (initialTab === 'saves' || initialTab === 'likes')) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
 
   useEffect(() => {
     if (!userId) {
@@ -84,10 +93,17 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
       setErrorMsg('No user found. Please log in to view your vault.')
       return
     }
-    loadVault()
+    loadAllVaultData()
+
+    function handleVaultSync() {
+      const likes = getLikedPosts(userId)
+      setLikedItems(likes.map(mapItem))
+    }
+    window.addEventListener('mindvault_vault_updated', handleVaultSync)
+    return () => window.removeEventListener('mindvault_vault_updated', handleVaultSync)
   }, [userId])
 
-  // Close modal on Escape key & disable body scroll
+  // Close full-screen modal on Escape key & disable background scroll
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') setSelectedItem(null)
@@ -102,11 +118,17 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
     }
   }, [selectedItem])
 
-  async function loadVault() {
+  async function loadAllVaultData() {
     setStatus('loading')
     try {
+      // 1. Load saved & mastered items from backend
       const raw = await getVault(userId)
-      setItems(raw.map(mapItem))
+      setSavedItems(raw.map(mapItem))
+
+      // 2. Load liked items from local vault store
+      const localLikes = getLikedPosts(userId)
+      setLikedItems(localLikes.map(mapItem))
+
       setStatus('ok')
     } catch (err) {
       setErrorMsg(err.message)
@@ -114,52 +136,105 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
     }
   }
 
-  const filtered = filter === 'all'
-    ? items
-    : items.filter(v => v.status === filter)
+  function handleTabSwitch(tab) {
+    setActiveTab(tab)
+    if (onTabChange) onTabChange(tab)
+  }
 
-  const masteredCount = items.filter(i => i.status === 'mastered').length
-  const savedCount    = items.filter(i => i.status === 'saved').length
+  // Display items depending on active tab
+  const displayedSaved = filter === 'all'
+    ? savedItems
+    : savedItems.filter(v => v.status === filter)
+
+  const currentItems = activeTab === 'saves' ? displayedSaved : likedItems
+
+  const masteredCount = savedItems.filter(i => i.status === 'mastered').length
+  const bookmarkedCount = savedItems.filter(i => i.status === 'saved').length
+  const likedCount = likedItems.length
 
   return (
     <div className="content-wrap page-enter">
       {/* ── Page Header ── */}
       <div className="page-header">
-        <div>
-          <h1 className="page-title">Your vault</h1>
-          <p className="page-subtitle">Curated titles & mastered concepts. Click any title to open the full post.</p>
-        </div>
-        {status === 'ok' && items.length > 0 && (
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{masteredCount}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>mastered</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{savedCount}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>saved</div>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 className="page-title">Your Vault</h1>
+            <p className="page-subtitle">Your personal repository of curated knowledge, favorites, and mastered concepts.</p>
           </div>
-        )}
+
+          {status === 'ok' && (
+            <div className="vault-stats-badge-group">
+              <div className="vault-stat-pill">
+                <span className="vault-stat-num">{bookmarkedCount}</span>
+                <span className="vault-stat-txt">Saves</span>
+              </div>
+              <div className="vault-stat-pill">
+                <span className="vault-stat-num">{likedCount}</span>
+                <span className="vault-stat-txt">Likes</span>
+              </div>
+              <div className="vault-stat-pill mastered">
+                <span className="vault-stat-num">{masteredCount}</span>
+                <span className="vault-stat-txt">Mastered</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ── Filters ── */}
-      <div className="filter-bar">
-        {['all', 'mastered', 'saved'].map(f => (
+      {/* ── Primary Vault Mode Switcher: Saves vs Likes ── */}
+      <div className="vault-mode-switcher-wrap">
+        <div className="vault-mode-switcher">
           <button
-            key={f}
-            className={`filter-btn${filter === f ? ' active' : ''}`}
-            onClick={() => setFilter(f)}
+            className={`vault-mode-tab${activeTab === 'saves' ? ' active' : ''}`}
+            onClick={() => handleTabSwitch('saves')}
           >
-            {f === 'all' ? 'All' : f === 'mastered' ? '✓ Mastered' : '· Saved'}
+            <span className="tab-icon">📌</span>
+            <span>Saved Posts</span>
+            <span className="tab-counter">{savedItems.length}</span>
           </button>
-        ))}
+
+          <button
+            className={`vault-mode-tab${activeTab === 'likes' ? ' active' : ''}`}
+            onClick={() => handleTabSwitch('likes')}
+          >
+            <span className="tab-icon">❤️</span>
+            <span>Liked Posts</span>
+            <span className="tab-counter">{likedItems.length}</span>
+          </button>
+        </div>
       </div>
 
-      {/* ── Grid of Saved Titles ── */}
+      {/* ── Sub-filters for Saves ── */}
+      {activeTab === 'saves' && (
+        <div className="filter-bar">
+          {[
+            { id: 'all',      label: 'All Saves' },
+            { id: 'mastered', label: '✓ Mastered' },
+            { id: 'saved',    label: '· Bookmarked' },
+          ].map(f => (
+            <button
+              key={f.id}
+              className={`filter-btn${filter === f.id ? ' active' : ''}`}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Sub-info for Likes ── */}
+      {activeTab === 'likes' && (
+        <div className="likes-info-bar">
+          <span className="likes-info-icon">❤️</span>
+          <span>Showing all posts favorited from your Feed and Discovery. Click any card to read in full screen.</span>
+        </div>
+      )}
+
+      {/* ── Grid of Saved / Liked Titles ── */}
       <div className="card-grid">
         {/* Loading skeletons */}
-        {status === 'loading' && [1, 2, 3, 4].map(n => <SkeletonCard key={n} />)}
+        {status === 'loading' && [1, 2, 3, 4, 5, 6].map(n => <SkeletonCard key={n} />)}
 
         {/* Error state */}
         {status === 'error' && (
@@ -167,38 +242,40 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
             <div className="empty-icon">⚠️</div>
             <h3 className="empty-title">Could not load your vault</h3>
             <p className="empty-sub">{errorMsg}</p>
-            <button className="btn btn-primary" onClick={loadVault} style={{ marginTop: 12 }}>
+            <button className="btn btn-primary" onClick={loadAllVaultData} style={{ marginTop: 12 }}>
               Retry
             </button>
           </div>
         )}
 
         {/* Empty state */}
-        {status === 'ok' && filtered.length === 0 && (
+        {status === 'ok' && currentItems.length === 0 && (
           <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-            <div className="empty-icon">🗄️</div>
+            <div className="empty-icon">{activeTab === 'likes' ? '❤️' : '🗄️'}</div>
             <h3 className="empty-title">
-              {filter === 'all' ? 'Your vault is empty' : `No ${filter} items yet`}
+              {activeTab === 'likes'
+                ? 'No liked posts yet'
+                : (filter === 'all' ? 'Your saves are empty' : `No ${filter} items yet`)}
             </h3>
             <p className="empty-sub">
-              {filter === 'all'
-                ? 'Save articles from Discovery or master topics in Deep Dive to fill your vault.'
+              {activeTab === 'likes'
+                ? 'Tap the ❤️ heart icon on any post in your Feed or Discovery to collect your favorites here.'
                 : filter === 'mastered'
-                  ? 'Complete a Deep Dive quiz to earn a Mastered badge.'
-                  : 'Bookmark posts from your feed or Discovery to save them here.'}
+                  ? 'Complete a Deep Dive crash course to earn a Mastered badge.'
+                  : 'Bookmark posts from your Feed or Discovery to save them for quick reference.'}
             </p>
             <button
               className="btn btn-primary"
-              onClick={() => navigate(filter === 'mastered' ? 'deepdive' : 'discovery')}
+              onClick={() => navigate(activeTab === 'likes' ? 'feed' : (filter === 'mastered' ? 'deepdive' : 'discovery'))}
               style={{ marginTop: 12 }}
             >
-              {filter === 'mastered' ? 'Start a Deep Dive' : 'Browse Discovery'}
+              {activeTab === 'likes' ? 'Explore Feed' : (filter === 'mastered' ? 'Start a Deep Dive' : 'Browse Discovery')}
             </button>
           </div>
         )}
 
         {/* Title-only compact cards */}
-        {status === 'ok' && filtered.map((item, i) => (
+        {status === 'ok' && currentItems.map((item, i) => (
           <div
             key={item._id || i}
             className="card vault-item-card page-enter"
@@ -217,8 +294,8 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
                 <span className="card-label-dot" />
                 {item.cat}
               </span>
-              <span className={`card-badge-inline${item.status === 'mastered' ? ' mastered' : ' saved-badge'}`}>
-                {item.status === 'mastered' ? '✓ Mastered' : '· Saved'}
+              <span className={`card-badge-inline${item.status === 'mastered' ? ' mastered' : (item.status === 'liked' ? ' liked-badge' : ' saved-badge')}`}>
+                {item.status === 'mastered' ? '✓ Mastered' : (item.status === 'liked' ? '❤️ Liked' : '· Saved')}
               </span>
             </div>
 
@@ -231,7 +308,7 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
             )}
 
             <div className="vault-card-action">
-              <span>Read full post</span>
+              <span>Read in full screen</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -240,33 +317,36 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
         ))}
       </div>
 
-      {/* ── Full Post Reader Modal ── */}
+      {/* ── Full Screen Post Reader Modal with Exit Option ── */}
       {selectedItem && (
-        <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
+        <div className="modal-overlay vault-fullscreen-overlay" onClick={() => setSelectedItem(null)}>
           <div
-            className="modal-card vault-modal-card"
+            className="modal-card vault-modal-card vault-fullscreen-card"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="vault-modal-title"
           >
-            {/* Header */}
+            {/* Top Navigation Bar with Exit Option */}
             <div className="vault-modal-header">
               <div className="vault-modal-meta-badges">
                 <span className="card-label" style={{ margin: 0 }}>
                   <span className="card-label-dot" />
                   {selectedItem.cat}
                 </span>
-                <span className={`card-badge-inline${selectedItem.status === 'mastered' ? ' mastered' : ' saved-badge'}`}>
-                  {selectedItem.status === 'mastered' ? '✓ Mastered' : '· Saved in Vault'}
+                <span className={`card-badge-inline${selectedItem.status === 'mastered' ? ' mastered' : (selectedItem.status === 'liked' ? ' liked-badge' : ' saved-badge')}`}>
+                  {selectedItem.status === 'mastered' ? '✓ Mastered' : (selectedItem.status === 'liked' ? '❤️ Liked Post' : '· Saved in Vault')}
                 </span>
               </div>
+
+              {/* Dedicated Exit Button */}
               <button
-                className="modal-close"
+                className="vault-exit-btn"
                 onClick={() => setSelectedItem(null)}
-                aria-label="Close modal"
+                aria-label="Exit fullscreen view"
+                title="Exit (Esc)"
               >
-                ✕
+                <span>✕ Exit</span>
               </button>
             </div>
 
@@ -278,7 +358,7 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
             {/* Sub-meta */}
             <div className="vault-modal-timestamp">
               {selectedItem.createdAt ? (
-                <span>Saved on {new Date(selectedItem.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span>Recorded on {new Date(selectedItem.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               ) : (
                 <span>Vault Entry</span>
               )}
@@ -340,10 +420,10 @@ export default function VaultPage({ userId, showToast, navigate, openDeepDive })
                 <span>🎯</span> Start Deep Dive on this Topic
               </button>
               <button
-                className="btn btn-ghost"
+                className="btn btn-ghost vault-footer-exit-btn"
                 onClick={() => setSelectedItem(null)}
               >
-                Close
+                ✕ Exit Full Screen
               </button>
             </div>
           </div>

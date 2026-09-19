@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getDiscovery, saveFeedItem, getVault } from '../api.js'
+import { isPostLiked, toggleLikePost } from '../utils/vaultStore.js'
 import LawDiscoveryPanel from '../components/LawDiscoveryPanel.jsx'
 
 /* ── Category → Visual Config ─────────────────────────────── */
@@ -279,8 +280,8 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
       const raw = await getDiscovery(userId, isRefresh)
       const mapped = raw.map(mapItem)
       setItems(mapped)
-      setLikes(Object.fromEntries(mapped.map((_, i) => [i, false])))
-      setLikeCounts(Object.fromEntries(mapped.map((_, i) => [i, Math.floor(Math.random() * 400) + 80])))
+      setLikes(Object.fromEntries(mapped.map((item, i) => [i, isPostLiked(userId, item._id, item.title)])))
+      setLikeCounts(Object.fromEntries(mapped.map((item, i) => [i, (isPostLiked(userId, item._id, item.title) ? 1 : 0) + Math.floor(Math.random() * 200) + 50])))
       setStatus('ok')
 
       setTimeout(() => {
@@ -302,9 +303,14 @@ export default function DiscoveryPage({ userId, showToast, navigate }) {
   }
 
   function handleToggleLike(i) {
-    setLikes(prev => ({ ...prev, [i]: !prev[i] }))
-    setLikeCounts(prev => ({ ...prev, [i]: prev[i] + (likes[i] ? -1 : 1) }))
-    if (!likes[i]) showToast('❤️ You liked this post')
+    const item = items[i]
+    if (!item) return
+    const isNowLiked = toggleLikePost(userId, item)
+    setLikes(prev => ({ ...prev, [i]: isNowLiked }))
+    setLikeCounts(prev => ({ ...prev, [i]: Math.max(0, (prev[i] || 0) + (isNowLiked ? 1 : -1)) }))
+    if (showToast) {
+      showToast(isNowLiked ? '❤️ Added to Liked Posts in Vault' : 'Removed from Liked Posts')
+    }
   }
 
   async function handleSave(item) {
