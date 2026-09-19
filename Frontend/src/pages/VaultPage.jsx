@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getVault } from '../api.js'
-import { getLikedPosts, deriveCategory, deriveHashtags, getCategoryIcon } from '../utils/vaultStore.js'
+import { getLikedPosts, deriveCategory, deriveHashtags, getCategoryIcon, syncLikesFromBackend } from '../utils/vaultStore.js'
 
 /* ── Skeleton for Compact Title Card ───────────────────────── */
 function SkeletonCard() {
@@ -122,13 +122,27 @@ export default function VaultPage({ userId, showToast, navigate, initialTab = 's
   async function loadAllVaultData() {
     setStatus('loading')
     try {
-      // 1. Load saved & mastered items from backend
-      const raw = await getVault(userId)
-      setSavedItems(raw.map(mapItem))
+      const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
+      // 1. Sync likes from MongoDB backend into local store
+      await syncLikesFromBackend(activeUid)
 
-      // 2. Load liked items from local vault store
-      const localLikes = getLikedPosts(userId)
-      setLikedItems(localLikes.map(mapItem))
+      // 2. Load all vault items from MongoDB backend
+      const raw = await getVault(activeUid)
+      const savedDocs = raw.filter(item => item.sourceType !== 'liked')
+      const dbLikes = raw.filter(item => item.sourceType === 'liked')
+
+      setSavedItems(savedDocs.map(mapItem))
+
+      // 3. Load liked items from local vault store (which merged with DB)
+      const localLikes = getLikedPosts(activeUid)
+      const mergedLikesMap = new Map()
+      for (const it of [...dbLikes, ...localLikes]) {
+        const key = (it.topic || it.title || '').trim().toLowerCase()
+        if (key && !mergedLikesMap.has(key)) {
+          mergedLikesMap.set(key, it)
+        }
+      }
+      setLikedItems(Array.from(mergedLikesMap.values()).map(mapItem))
 
       setStatus('ok')
     } catch (err) {

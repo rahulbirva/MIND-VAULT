@@ -3,14 +3,21 @@ const mongoose = require('mongoose');
 const vaultItemSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     topic: {
       type: String,
       required: true,
       trim: true,
+    },
+    cat: {
+      type: String,
+      default: '',
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
     body: {
       type: String,
@@ -36,10 +43,10 @@ const vaultItemSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    // "saved" = saved from discovery/feed; "mastered" = passed quiz
+    // "saved" = saved from discovery/feed; "mastered" = completed topic; "liked" = favorited post
     sourceType: {
       type: String,
-      enum: ['saved', 'mastered'],
+      enum: ['saved', 'mastered', 'liked'],
       required: true,
     },
   },

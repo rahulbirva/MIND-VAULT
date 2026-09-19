@@ -3,6 +3,8 @@
  * Local persistence, category classification, and hashtag generation for Liked & Saved posts in MindVault.
  */
 
+import { likeVaultPost, unlikeVaultPost, getVault } from '../api.js'
+
 const LIKES_KEY_PREFIX = 'mv_liked_posts_'
 const SAVES_KEY_PREFIX = 'mv_saved_posts_'
 
@@ -137,51 +139,60 @@ export function isPostLiked(userId, postId, topic) {
 }
 
 /**
- * Add or update a liked post with category and hashtags
+ * Add or update a liked post with category and hashtags (in LocalStorage and MongoDB)
  */
 export function saveLikedPost(userId, post) {
   if (!post) return
-  const list = getLikedPosts(userId)
+  const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
+  const list = getLikedPosts(activeUid)
   const postId = post._id
   const topicTitle = post.topic || post.title || 'Untitled Post'
   const cleanTopic = topicTitle.trim().toLowerCase()
 
   const exists = list.some(item => (postId && item._id === postId) || (cleanTopic && (item.topic || item.title || '').trim().toLowerCase() === cleanTopic))
-  if (!exists) {
-    const cat = deriveCategory(topicTitle, post.cat || post.category)
-    const hashtags = (Array.isArray(post.tags) && post.tags.length > 0)
-      ? post.tags.map(t => (t.startsWith('#') ? t : `#${t}`))
-      : deriveHashtags(topicTitle, cat)
+  
+  const cat = deriveCategory(topicTitle, post.cat || post.category)
+  const hashtags = (Array.isArray(post.tags) && post.tags.length > 0)
+    ? post.tags.map(t => (t.startsWith('#') ? t : `#${t}`))
+    : deriveHashtags(topicTitle, cat)
 
-    const enrichedPost = {
-      _id: post._id || `liked_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      topic: topicTitle,
-      title: topicTitle,
-      body: post.body || post.summary || '',
-      summary: post.summary || post.body || '',
-      keyPoints: Array.isArray(post.keyPoints) ? post.keyPoints : (Array.isArray(post.keyFacts) ? post.keyFacts : []),
-      tags: hashtags,
-      imageUrl: post.imageUrl || null,
-      videoUrl: post.videoUrl || null,
-      cat,
-      likedAt: new Date().toISOString(),
-      sourceType: 'liked',
-    }
+  const enrichedPost = {
+    _id: post._id || `liked_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    topic: topicTitle,
+    title: topicTitle,
+    body: post.body || post.summary || '',
+    summary: post.summary || post.body || '',
+    keyFacts: Array.isArray(post.keyFacts) ? post.keyFacts : (Array.isArray(post.keyPoints) ? post.keyPoints : []),
+    tags: hashtags,
+    imageUrl: post.imageUrl || null,
+    videoUrl: post.videoUrl || null,
+    cat,
+    likedAt: new Date().toISOString(),
+    sourceType: 'liked',
+  }
+
+  if (!exists) {
     const updated = [enrichedPost, ...list]
     try {
-      localStorage.setItem(getStorageKey(LIKES_KEY_PREFIX, userId), JSON.stringify(updated))
+      localStorage.setItem(getStorageKey(LIKES_KEY_PREFIX, activeUid), JSON.stringify(updated))
       window.dispatchEvent(new CustomEvent('mindvault_vault_updated', { detail: { type: 'like', count: updated.length } }))
     } catch (e) {
-      console.warn('LocalStorage full or error saving liked post:', e)
+      console.warn('LocalStorage error saving liked post:', e)
     }
   }
+
+  // Persist directly to MongoDB database
+  likeVaultPost(activeUid, enrichedPost).catch(err => {
+    console.warn('[vaultStore] Database like persistence failed:', err.message)
+  })
 }
 
 /**
- * Remove a post from liked list
+ * Remove a post from liked list (in LocalStorage and MongoDB)
  */
 export function removeLikedPost(userId, postId, topic) {
-  const list = getLikedPosts(userId)
+  const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
+  const list = getLikedPosts(activeUid)
   const cleanTopic = (topic || '').trim().toLowerCase()
   const filtered = list.filter(item => {
     if (postId && item._id === postId) return false
@@ -189,10 +200,18 @@ export function removeLikedPost(userId, postId, topic) {
     return true
   })
   try {
-    localStorage.setItem(getStorageKey(LIKES_KEY_PREFIX, userId), JSON.stringify(filtered))
+    localStorage.setItem(getStorageKey(LIKES_KEY_PREFIX, activeUid), JSON.stringify(filtered))
     window.dispatchEvent(new CustomEvent('mindvault_vault_updated', { detail: { type: 'unlike', count: filtered.length } }))
   } catch (e) {
     console.warn('Error updating liked posts:', e)
+  }
+
+  // Remove directly from MongoDB database
+  const topicName = topic || (postId && list.find(i => i._id === postId)?.topic) || ''
+  if (topicName) {
+    unlikeVaultPost(activeUid, topicName).catch(err => {
+      console.warn('[vaultStore] Database unlike persistence failed:', err.message)
+    })
   }
 }
 
@@ -209,4 +228,31 @@ export function toggleLikePost(userId, post) {
     saveLikedPost(userId, post)
     return true
   }
+}
+
+/**
+ * Synchronize liked posts from MongoDB database into local cache
+ */
+export async function syncLikesFromBackend(userId) {
+  const activeUid = userId || localStorage.getItem('mv_userId') || 'default_user'
+  try {
+    const dbLikes = await getVault(activeUid, 'liked')
+    if (Array.isArray(dbLikes) && dbLikes.length > 0) {
+      const local = getLikedPosts(activeUid)
+      const mergedMap = new Map()
+      for (const item of [...dbLikes, ...local]) {
+        const key = (item.topic || item.title || '').trim().toLowerCase()
+        if (key && !mergedMap.has(key)) {
+          mergedMap.set(key, item)
+        }
+      }
+      const mergedList = Array.from(mergedMap.values())
+      localStorage.setItem(getStorageKey(LIKES_KEY_PREFIX, activeUid), JSON.stringify(mergedList))
+      window.dispatchEvent(new CustomEvent('mindvault_vault_updated', { detail: { type: 'sync', count: mergedList.length } }))
+      return mergedList
+    }
+  } catch (err) {
+    console.warn('[vaultStore] Could not sync likes from backend:', err.message)
+  }
+  return getLikedPosts(activeUid)
 }

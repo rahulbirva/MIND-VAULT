@@ -72,9 +72,27 @@ export const getDailyDiscoveryPost = (userId = 'default_user') =>
 
 
 // ── Vault ─────────────────────────────────────────────────────────────────────
-/** Fetch all vault items for a user, newest first. */
-export const getVault = (userId) =>
-  request('GET', `/vault?userId=${encodeURIComponent(userId)}`)
+/** Fetch all vault items for a user, optionally filtered by sourceType. */
+export const getVault = (userId, sourceType = '') =>
+  request('GET', `/vault?userId=${encodeURIComponent(userId)}${sourceType ? `&sourceType=${encodeURIComponent(sourceType)}` : ''}`)
+
+/** Persist a liked post directly to MongoDB database. */
+export const likeVaultPost = (userId, post) =>
+  request('POST', '/vault/like', {
+    userId,
+    topic: post.topic || post.title,
+    body: post.body || post.summary || '',
+    summary: post.summary || post.body || '',
+    keyFacts: post.keyFacts || post.keyPoints || [],
+    imageUrl: post.imageUrl || null,
+    videoUrl: post.videoUrl || null,
+    cat: post.cat || post.category || '',
+    tags: post.tags || [],
+  })
+
+/** Remove a liked post from MongoDB database. */
+export const unlikeVaultPost = (userId, topic) =>
+  request('POST', '/vault/unlike', { userId, topic })
 
 // ── Health ────────────────────────────────────────────────────────────────────
 export const healthCheck = () => request('GET', '/health')
