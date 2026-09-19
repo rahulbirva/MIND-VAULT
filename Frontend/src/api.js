@@ -69,6 +69,22 @@ export const getDiscovery = (userId = '', refresh = false) =>
 export const getDailyDiscoveryPost = (userId = 'default_user') =>
   request('POST', '/discovery/daily-post', { userId })
 
+// ── AI Reels ──────────────────────────────────────────────────────────────────
+/** Fetch AI-generated video reels matching user interests or mixed library. */
+export const getReels = (userId) =>
+  request('GET', `/reels${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`)
+
+/** Toggle like state for a reel in MongoDB. */
+export const likeReel = (reelId, userId) =>
+  request('POST', `/reels/${encodeURIComponent(reelId)}/like`, { userId })
+
+/** Increment view count for a reel in MongoDB. */
+export const recordReelView = (reelId) =>
+  request('POST', `/reels/${encodeURIComponent(reelId)}/view`)
+
+/** Sync disk manifest with MongoDB. */
+export const syncReelsWithDB = () =>
+  request('POST', '/reels/sync')
 
 
 // ── Vault ─────────────────────────────────────────────────────────────────────

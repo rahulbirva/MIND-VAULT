@@ -42,6 +42,7 @@ export default function Navbar({ page, navigate, onRefreshFeed, onLogout, userId
 
   const tabs = [
     { id: 'feed',      label: 'Feed' },
+    { id: 'reels',     label: 'Reels 🎬' },
     { id: 'discovery', label: 'Discovery' },
   ]
 

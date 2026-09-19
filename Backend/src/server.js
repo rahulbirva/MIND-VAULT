@@ -1,5 +1,7 @@
 // ── TLS FIX — must be the very first line ─────────────────────────────────────
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const tls = require('tls');
+tls.DEFAULT_CIPHERS = 'DEFAULT@SECLEVEL=1';
 
 const path = require('path');
 const dotenv = require('dotenv');
@@ -35,7 +37,9 @@ function startServer() {
 // Always connect to MongoDB — it stores users, interests, vault items.
 // MOCK_MODE only controls whether the Python AI service is called or mocked.
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    tlsAllowInvalidCertificates: true,
+  })
   .then(() => {
     console.log('✅  MongoDB connected');
     startServer();

@@ -1,0 +1,74 @@
+[
+  {
+    "topic": "space",
+    "filename": "space_2.mp4",
+    "title": "Spacewalk Above Earth",
+    "caption": "An astronaut's view of Earth and stars, bathed in sunlight.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, shallow depth of field. An astronaut floats gracefully above the Earth\u2019s curved horizon, surrounded by the glittering stars of deep space, with brilliant sunlight reflecting off the astronaut's visor, creating a stunning contrast of light and shadow.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:15:14Z"
+  },
+  {
+    "topic": "history",
+    "filename": "history_1.mp4",
+    "title": "Colosseum at Sunset",
+    "caption": "The Colosseum glows in the sunset, a timeless symbol of Roman engineering.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, and a slow tracking push-in shot, capturing the sunset's golden hour glow across the ancient Roman colosseum, with dramatic clouds casting shadows and enhancing the architectural details. The scene showcases the enduring grandeur of the structure, bathed in warm, golden light.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:15:27Z"
+  },
+  {
+    "topic": "history",
+    "filename": "history_2.mp4",
+    "title": "Echoes of the Pyramids",
+    "caption": "The Great Pyramids of Giza stand as ancient sentinels,\u5b88\u62a4\u7740\u6c99\u6f20\u4e2d\u65e0\u5c3d\u7684\u79d8\u5bc6\u3002",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, and a sweeping low-angle steadicam dolly. The camera glides over the Great Pyramids of Giza, capturing the drifting desert sand and a dramatic dusk horizon, revealing the immense scale and enduring mystery of these ancient wonders under a fiery orange sky.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, artificial texture, low resolution, static image, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, static image",
+    "createdAt": "2026-09-19T06:15:40Z"
+  },
+  {
+    "topic": "politics",
+    "filename": "politics_1.mp4",
+    "title": "Halls of Governance",
+    "caption": "Witness the awe-inspiring majesty of a government building during a flag-raising ceremony.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, and shallow depth of field, capturing the grand government building with its majestic stone pillars supporting an immense stone archway, where a large crowd gathers to witness the formal raising of national flags, casting solemn shadows under the dramatic sky, exuding civic grandeur and national pride.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:15:53Z"
+  },
+  {
+    "topic": "politics",
+    "filename": "politics_2.mp4",
+    "title": "The Capitol Rotunda",
+    "caption": "The Capitol dome, a symbol of democratic governance, glows under twilight's gentle embrace.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, and a gentle breeze waving national flags in the background, creating a cinematic depth as the camera slowly tracks in on the illuminated Capitol dome at twilight, capturing the intricate details of the stonework and the soft glow of the interior lights.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:16:05Z"
+  },
+  {
+    "topic": "technology",
+    "filename": "technology_1.mp4",
+    "title": "Inside the Silicon Core",
+    "caption": "Inside a microchip, data pulses like neon lights, driving the future of technology.",
+    "video_prompt": "8K photorealistic macro shot, dolly-in on a microchip with glowing electrical traces and pulsing neon data currents, captured on ARRI Alexa 65 with a 105mm macro lens, high-key studio lighting casting dramatic shadows, set in a sleek, futuristic hardware environment with minimalist aesthetic and clean, sharp details.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, artificial lighting, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:16:17Z"
+  },
+  {
+    "topic": "science",
+    "filename": "science_1.mp4",
+    "title": "Synaptic Awakening",
+    "caption": "Neurons firing in brilliant blue and violet, revealing the hidden language of the brain.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, and a smooth orbiting arc shot, capturing a living neural network with blue and violet electrical impulses firing, displayed on a transparent substrate, glowing under a focused beam of light, set against a darkened background to emphasize the intricate patterns of neural activity.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, artificial texture, blurry, morphing, distorted anatomy, flickering, watermark, text overlay, low resolution, static image",
+    "createdAt": "2026-09-19T06:16:29Z"
+  },
+  {
+    "topic": "space",
+    "filename": "space_1.mp4",
+    "title": "Orbital Launch Ascent",
+    "caption": "Witness the raw power of a rocket breaking free from Earth's gravity.",
+    "video_prompt": "8K photorealistic IMAX documentary footage, shot on ARRI Alexa 65 with a 35mm master prime lens, natural directional lighting, shallow depth of field, capturing the dramatic slow-motion launch of a rocket, billowing clouds of smoke and blue sky, with a golden engine flame blazing against the backdrop, all set against the vastness of the launchpad environment.",
+    "negative_prompt": "cartoon, drawing, sketch, illustration, anime, 3D render, CGI animation, painting, concept art, doodle, artificial look, artificial sky, artificial smoke, artificial flame, low resolution, static image",
+    "createdAt": "2026-09-19T06:35:43Z"
+  }
+]
