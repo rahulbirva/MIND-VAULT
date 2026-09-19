@@ -205,7 +205,7 @@ export default function LearnFeedPage({ showToast }) {
         threshold={70}
       />
 
-      {/* ── Top Header with Manual Refresh Action ── */}
+      {/* ── Top Header ── */}
       <div className="max-w-xl mx-auto px-4 pt-6 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-[#5D0D18] flex items-center justify-center text-white shadow-md">
@@ -221,15 +221,11 @@ export default function LearnFeedPage({ showToast }) {
           </div>
         </div>
 
-        {/* Refresh Feed button with spin loader */}
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#5D0D18] hover:bg-[#7A1122] disabled:opacity-50 text-white shadow-sm transition-all cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
-        </button>
+        {/* Live status badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-amber-900/10 dark:bg-zinc-800 text-[#5D0D18] dark:text-red-300 border border-amber-900/15 dark:border-zinc-700">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Feed Live</span>
+        </div>
       </div>
 
       {/* ── Topic Filter Bar ── */}
@@ -294,28 +290,64 @@ export default function LearnFeedPage({ showToast }) {
           <div className="text-center py-16 px-4 space-y-3">
             <Sparkles className="w-10 h-10 text-amber-700/40 mx-auto" />
             <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">No posts in this category</h3>
-            <p className="text-xs text-zinc-500">Try selecting "All Concepts" or pull to refresh.</p>
+            <p className="text-xs text-zinc-500">Try selecting "All Concepts" or refresh.</p>
             <button
-              onClick={() => setActiveTag('All')}
+              onClick={() => {
+                setActiveTag('All')
+                handleRefresh()
+              }}
               className="px-4 py-2 rounded-full bg-[#5D0D18] text-white text-xs font-semibold cursor-pointer"
             >
-              View All Concepts
+              Refresh & View All Concepts
             </button>
           </div>
         )}
 
-        {/* Infinite Scroll Bottom Sentinel */}
-        <div ref={sentinelRef} className="py-6 flex items-center justify-center">
+        {/* Infinite Scroll Bottom Sentinel & End-of-Feed Refresh Panel */}
+        <div ref={sentinelRef} className="pt-4 pb-12">
           {loadingMore && (
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+            <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-zinc-500">
               <RefreshCw className="w-4 h-4 animate-spin text-[#5D0D18]" />
               <span>Loading more bite-sized concepts...</span>
             </div>
           )}
+
           {!hasMore && posts.length > 0 && (
-            <p className="text-xs text-zinc-400 font-medium tracking-wide">
-              🎉 You've caught up on all concepts for now! Pull down to refresh.
-            </p>
+            <div className="mt-4 p-6 bg-white dark:bg-zinc-900 border border-amber-900/15 dark:border-zinc-800 rounded-3xl text-center space-y-4 shadow-sm">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 dark:bg-zinc-800 flex items-center justify-center text-[#5D0D18] dark:text-red-400">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                  You've caught up on all concepts!
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
+                  Ready for more? Refresh right here to get a fresh randomized batch of Computer Science cards.
+                </p>
+              </div>
+
+              {/* Prominent End-of-Feed Refresh Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    handleRefresh()
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={isRefreshing}
+                  className="w-full sm:w-auto px-6 py-3 rounded-full text-xs font-bold bg-[#5D0D18] hover:bg-[#7A1122] disabled:opacity-50 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span>{isRefreshing ? 'Loading Fresh Feed...' : '🔄 Refresh with Fresh Concepts'}</span>
+                </button>
+
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="w-full sm:w-auto px-4 py-3 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer"
+                >
+                  ⬆️ Scroll to Top
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </main>
